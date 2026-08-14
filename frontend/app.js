@@ -7,6 +7,7 @@ let humanRecorder = null;
 let humanChunks = [];
 let recognition = null;
 let transcript = '';
+let audioContext = null;
 
 function setRecordingUI(waveId, statusId, active, message) {
   $(waveId).classList.toggle('active', active);
@@ -14,37 +15,66 @@ function setRecordingUI(waveId, statusId, active, message) {
 }
 
 function speakHuman(text) {
-  if (!('speechSynthesis' in window)) return;
+  if (!('speechSynthesis' in window)) {
+    console.warn('Speech synthesis is not supported by this browser.');
+    return;
+  }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.95;
   utterance.pitch = 1;
+  utterance.volume = 1;
   window.speechSynthesis.speak(utterance);
 }
 
-function playDogCue(cue) {
-  // This is a generated training-style audio cue, not a literal dog language translation.
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return;
-  const ctx = new AudioContext();
-  const now = ctx.currentTime;
-  const frequencies = {
-    SIT: [420], STAY: [360, 360], COME: [520, 680], STOP: [280], DOWN: [330], NO: [250], CUSTOM: [440]
+async function getAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) throw new Error('Web Audio is not supported by this browser.');
+  if (!audioContext || audioContext.state === 'closed') audioContext = new AudioContextClass();
+  if (audioContext.state === 'suspended') await audioContext.resume();
+  return audioContext;
+}
+
+// Generate a short bark-like training sound. This is synthetic audio, not a claim
+// that it is an actual translation into dog language.
+async function playDogCue(cue) {
+  const ctx = await getAudioContext();
+  const patterns = {
+    SIT: [520],
+    STAY: [430, 430],
+    COME: [620, 780],
+    STOP: [300],
+    DOWN: [380],
+    NO: [260],
+    CUSTOM: [500]
   };
-  const tones = frequencies[cue] || frequencies.CUSTOM;
-  tones.forEach((frequency, index) => {
+  const frequencies = patterns[cue] || patterns.CUSTOM;
+  const startTime = ctx.currentTime + 0.03;
+
+  frequencies.forEach((frequency, index) => {
+    const start = startTime + index * 0.28;
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = frequency;
-    const start = now + index * 0.22;
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
+    const filter = ctx.createBiquadFilter();
+
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(frequency * 0.72, start);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency, start + 0.06);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.55, start + 0.20);
+
+    filter.type = 'bandpass';
+    filter.frequency.value = frequency * 1.4;
+    filter.Q.value = 1.2;
+
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.32, start + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.21);
+
+    oscillator.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
     oscillator.start(start);
-    oscillator.stop(start + 0.2);
+    oscillator.stop(start + 0.23);
   });
 }
 
@@ -75,15 +105,14 @@ $('dogRecordBtn').addEventListener('click', async () => {
 
       try {
         const form = new FormData();
-        const extension = blob.type.includes('mp4') ? 'm4a' : 'webm';
-        form.append('file', blob, `dog-recording.${extension}`);
+        form.append('file', blob, 'dog-recording.webm');
         const response = await fetch(`${API}/api/dog-to-human`, { method: 'POST', body: form });
         const data = await response.json();
         if (!response.ok) throw new Error(data.detail || 'Dog audio analysis failed');
 
         const message = `Your dog may be ${data.label.toLowerCase()}. ${data.explanation}`;
         $('dogResult').innerHTML = `
-          <h3>🗣️ Human interpretation</h3>
+          <h3>🗣️ Human voice interpretation</h3>
           <p>${message}</p>
           <p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p>
           <div class="stats">
@@ -91,7 +120,9 @@ $('dogRecordBtn').addEventListener('click', async () => {
             <div class="stat">Energy: ${data.features.energy_db} dB</div>
             <div class="stat">Duration: ${data.features.duration_seconds}s</div>
             <div class="stat">Bursts: ${data.features.sound_bursts}</div>
-          </div>`;
+          </div>
+          <button id="speakInterpretationBtn" type="button">🔊 Speak Interpretation Again</button>`;
+        $('speakInterpretationBtn').addEventListener('click', () => speakHuman(message));
         speakHuman(message);
         setRecordingUI('dogWave', 'dogStatus', false, 'Done — interpretation spoken aloud');
       } catch (error) {
@@ -132,12 +163,14 @@ function setupSpeechRecognition() {
     transcript = text.trim();
     $('transcript').textContent = transcript || 'Listening...';
   };
-  r.onerror = () => {};
+  r.onerror = (event) => console.warn('Speech recognition:', event.error);
   return r;
 }
 
 $('humanRecordBtn').addEventListener('click', async () => {
   try {
+    // Create/resume the audio context from the user's click so Chrome allows audio output later.
+    await getAudioContext();
     const stream = await getMicrophone();
     humanChunks = [];
     transcript = '';
@@ -151,7 +184,7 @@ $('humanRecordBtn').addEventListener('click', async () => {
 
       const text = transcript.trim();
       if (!text) {
-        $('humanResult').innerHTML = '<p>❌ I could not understand your voice. Please speak clearly and try again.</p>';
+        $('humanResult').innerHTML = '<p>❌ I could not understand your voice. Please allow microphone access and speak clearly.</p>';
         setRecordingUI('humanWave', 'humanStatus', false, 'No speech detected');
         return;
       }
@@ -167,16 +200,32 @@ $('humanRecordBtn').addEventListener('click', async () => {
         if (!response.ok) throw new Error(data.detail || 'Voice conversion failed');
 
         $('humanResult').innerHTML = `
-          <h3>🐕 Dog cue: ${data.cue}</h3>
+          <h3>🐕 Dog voice cue: ${data.cue}</h3>
           <p><strong>You said:</strong> ${text}</p>
-          <p><strong>Generated cue:</strong> ${data.cue}</p>
+          <p><strong>Generated dog cue:</strong> ${data.cue}</p>
           <p><strong>Tone:</strong> ${data.tone}</p>
           <p>${data.tip}</p>
           <button id="playCueBtn" type="button">🔊 Play Dog Cue</button>
-          <p><small>${data.note}</small></p>`;
-        $('playCueBtn').addEventListener('click', () => playDogCue(data.cue));
-        playDogCue(data.cue);
-        setRecordingUI('humanWave', 'humanStatus', false, 'Done — dog cue generated');
+          <p><small>This is a synthetic dog-like training sound, not literal dog language.</small></p>`;
+
+        $('playCueBtn').addEventListener('click', async () => {
+          const button = $('playCueBtn');
+          button.disabled = true;
+          button.textContent = '🔊 Playing...';
+          try {
+            await playDogCue(data.cue);
+          } catch (error) {
+            button.textContent = '❌ Audio unavailable';
+            console.error(error);
+          } finally {
+            setTimeout(() => {
+              button.disabled = false;
+              button.textContent = '🔊 Play Dog Cue';
+            }, 500);
+          }
+        });
+
+        setRecordingUI('humanWave', 'humanStatus', false, 'Done — dog voice cue ready');
       } catch (error) {
         $('humanResult').innerHTML = `<p>❌ ${error.message}</p>`;
         setRecordingUI('humanWave', 'humanStatus', false, 'Conversion failed');
@@ -187,6 +236,8 @@ $('humanRecordBtn').addEventListener('click', async () => {
     recognition = setupSpeechRecognition();
     if (recognition) {
       try { recognition.start(); } catch (_) {}
+    } else {
+      $('transcript').textContent = 'Speech recognition is unavailable in this browser.';
     }
     $('humanRecordBtn').disabled = true;
     $('humanStopBtn').disabled = false;
