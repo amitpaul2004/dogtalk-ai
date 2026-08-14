@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DogTalk AI</title>
+  <title>DogTalk AI — Voice to Voice</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,37 +11,61 @@
     <header class="hero">
       <div class="dog">🐶</div>
       <div>
-        <p class="eyebrow">AI COMMUNICATION LAB</p>
+        <p class="eyebrow">AI VOICE COMMUNICATION LAB</p>
         <h1>DogTalk <span>AI</span></h1>
-        <p>Experimental Human ↔ Dog communication assistant.</p>
+        <p>Human voice ↔ dog sound communication prototype.</p>
       </div>
     </header>
 
-    <div class="disclaimer">⚠️ Prototype: results are behavioral interpretations, not literal dog-language translation.</div>
+    <div class="disclaimer">⚠️ Experimental prototype: this does not literally decode dog language. It estimates likely behavioral states and creates consistent training-style audio cues.</div>
 
     <section class="grid">
       <article class="card">
         <div class="card-head">
-          <span class="icon">🎙️</span>
-          <div><h2>Dog → Human</h2><p>Analyze a bark, whine or growl.</p></div>
+          <span class="icon">🐕</span>
+          <div><h2>Dog Voice → Human Voice</h2><p>Record a bark, whine or growl and hear the interpretation.</p></div>
         </div>
-        <input id="audioInput" type="file" accept="audio/*" />
-        <button id="analyzeBtn">Analyze Dog Sound</button>
+        <div class="voice-box">
+          <div id="dogWave" class="wave">● ● ● ● ● ● ● ● ●</div>
+          <div id="dogStatus" class="status">Ready to record</div>
+        </div>
+        <div class="button-row">
+          <button id="dogRecordBtn">🎙️ Start Dog Recording</button>
+          <button id="dogStopBtn" class="secondary" disabled>⏹ Stop</button>
+        </div>
+        <audio id="dogPreview" controls class="audio hidden"></audio>
         <div id="dogResult" class="result hidden"></div>
       </article>
 
       <article class="card">
         <div class="card-head">
-          <span class="icon">🗣️</span>
-          <div><h2>Human → Dog</h2><p>Turn a sentence into a training cue.</p></div>
+          <span class="icon">🧑</span>
+          <div><h2>Human Voice → Dog Voice</h2><p>Speak a command and generate a consistent dog-training cue sound.</p></div>
         </div>
-        <textarea id="humanText" rows="4" placeholder="Example: Come here, buddy!"></textarea>
-        <button id="convertBtn">Convert to Dog Cue</button>
+        <div class="voice-box">
+          <div id="humanWave" class="wave">● ● ● ● ● ● ● ● ●</div>
+          <div id="humanStatus" class="status">Microphone ready</div>
+        </div>
+        <div class="transcript" id="transcript">Your spoken command will appear here.</div>
+        <div class="button-row">
+          <button id="humanRecordBtn">🎤 Speak to Dog</button>
+          <button id="humanStopBtn" class="secondary" disabled>⏹ Stop</button>
+        </div>
         <div id="humanResult" class="result hidden"></div>
       </article>
     </section>
 
-    <footer>DogTalk AI • MVP v0.1</footer>
+    <section class="how-it-works">
+      <h2>How the voice converter works</h2>
+      <div class="steps">
+        <div><b>01</b><span>🎤 Voice input</span></div>
+        <div><b>02</b><span>🧠 Audio analysis</span></div>
+        <div><b>03</b><span>🤖 Interpretation</span></div>
+        <div><b>04</b><span>🔊 Voice/audio output</span></div>
+      </div>
+    </section>
+
+    <footer>DogTalk AI • Voice-to-Voice MVP v0.2</footer>
   </main>
   <script src="app.js"></script>
 </body>
