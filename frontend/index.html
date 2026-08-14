@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DogTalk AI</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="dog">🐶</div>
+      <div>
+        <p class="eyebrow">AI COMMUNICATION LAB</p>
+        <h1>DogTalk <span>AI</span></h1>
+        <p>Experimental Human ↔ Dog communication assistant.</p>
+      </div>
+    </header>
+
+    <div class="disclaimer">⚠️ Prototype: results are behavioral interpretations, not literal dog-language translation.</div>
+
+    <section class="grid">
+      <article class="card">
+        <div class="card-head">
+          <span class="icon">🎙️</span>
+          <div><h2>Dog → Human</h2><p>Analyze a bark, whine or growl.</p></div>
+        </div>
+        <input id="audioInput" type="file" accept="audio/*" />
+        <button id="analyzeBtn">Analyze Dog Sound</button>
+        <div id="dogResult" class="result hidden"></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <span class="icon">🗣️</span>
+          <div><h2>Human → Dog</h2><p>Turn a sentence into a training cue.</p></div>
+        </div>
+        <textarea id="humanText" rows="4" placeholder="Example: Come here, buddy!"></textarea>
+        <button id="convertBtn">Convert to Dog Cue</button>
+        <div id="humanResult" class="result hidden"></div>
+      </article>
+    </section>
+
+    <footer>DogTalk AI • MVP v0.1</footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
