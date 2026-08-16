@@ -31,7 +31,6 @@ function getAudioContext() {
   return Promise.resolve(audioContext);
 }
 
-// Creates a short dog-like bark using filtered noise + pitch movement.
 function bark(ctx, start, duration, pitch, volume) {
   const sampleRate = ctx.sampleRate;
   const length = Math.max(1, Math.floor(sampleRate * duration));
@@ -62,8 +61,6 @@ function bark(ctx, start, duration, pitch, volume) {
   source.stop(start + duration + 0.02);
 }
 
-// Converts the complete human sentence into a repeatable bark pattern.
-// This is a communication experiment, NOT a scientifically decoded dog language.
 async function playDogVoice(text, cue) {
   const ctx = await getAudioContext();
   const normalized = (text || '').trim();
@@ -72,8 +69,6 @@ async function playDogVoice(text, cue) {
   const base = cue === 'STOP' || cue === 'NO' ? 260 : cue === 'COME' ? 560 : 430;
   const now = ctx.currentTime + 0.04;
 
-  // Each word contributes a bark unit. Sentence length changes rhythm.
-  // Character values create a deterministic pitch pattern for the same sentence.
   for (let i = 0; i < wordCount; i++) {
     const word = words[i % words.length];
     const code = [...word].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
@@ -83,7 +78,6 @@ async function playDogVoice(text, cue) {
     bark(ctx, now + i * (duration + gap), duration, pitch, 0.75);
   }
 
-  // Short ending bark marks the end of the sentence.
   bark(ctx, now + wordCount * 0.21 + 0.04, 0.16, base + 120, 0.68);
 }
 
@@ -94,7 +88,6 @@ async function getMicrophone() {
   return navigator.mediaDevices.getUserMedia({ audio: true });
 }
 
-// ---------------- DOG VOICE -> HUMAN VOICE ----------------
 $('dogRecordBtn').addEventListener('click', async () => {
   try {
     const stream = await getMicrophone();
@@ -154,7 +147,6 @@ $('dogStopBtn').addEventListener('click', () => {
   $('dogStopBtn').disabled = true;
 });
 
-// ---------------- HUMAN VOICE -> DOG VOICE ----------------
 function setupSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) return null;
