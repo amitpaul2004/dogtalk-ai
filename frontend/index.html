@@ -3,69 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DogTalk AI — Voice to Voice</title>
+  <meta name="theme-color" content="#090b12" />
+  <title>DogTalk AI — Voice Translator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="noise"></div>
   <main class="app">
+    <nav class="nav">
+      <div class="brand"><span class="brand-mark">🐾</span><span>DogTalk <b>AI</b></span></div>
+      <div class="nav-pill"><span class="live-dot"></span> Voice Lab <span class="version">MVP 0.2</span></div>
+    </nav>
+
     <header class="hero">
-      <div class="dog">🐶</div>
-      <div>
-        <p class="eyebrow">AI VOICE COMMUNICATION LAB</p>
-        <h1>DogTalk <span>AI</span></h1>
-        <p>Human voice ↔ dog sound communication prototype.</p>
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> HUMAN ↔ DOG COMMUNICATION</div>
+        <h1>Talk human.<br><em>Hear dog.</em></h1>
+        <p class="hero-text">A voice-to-voice experiment that turns human speech into dog-like vocal patterns and interprets dog sounds into human-readable meaning.</p>
+        <div class="hero-meta">
+          <span>🎙️ Microphone ready</span><span>⚡ Real-time prototype</span><span>🔊 Audio output</span>
+        </div>
+      </div>
+      <div class="hero-orbit" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="hero-dog">🐕</div><div class="orbit-dot dot-a"></div><div class="orbit-dot dot-b"></div>
       </div>
     </header>
 
-    <div class="disclaimer">⚠️ Experimental prototype: this does not literally decode dog language. It estimates likely behavioral states and creates consistent training-style audio cues.</div>
+    <div class="notice"><span>⚠️</span><div><strong>Experimental AI prototype</strong><p>This is not a scientifically verified dog-language translator. Outputs represent a repeatable vocalization/behavioral interpretation.</p></div></div>
 
-    <section class="grid">
-      <article class="card">
-        <div class="card-head">
-          <span class="icon">🐕</span>
-          <div><h2>Dog Voice → Human Voice</h2><p>Record a bark, whine or growl and hear the interpretation.</p></div>
-        </div>
-        <div class="voice-box">
-          <div id="dogWave" class="wave">● ● ● ● ● ● ● ● ●</div>
-          <div id="dogStatus" class="status">Ready to record</div>
+    <section class="translator-grid">
+      <article class="translator-card dog-card">
+        <div class="card-top"><div class="direction dog-direction">DOG → HUMAN</div><div class="card-icon">🐕</div></div>
+        <h2>What is your dog saying?</h2>
+        <p class="card-description">Record a bark, whine or growl. DogTalk analyzes the sound and speaks a human interpretation.</p>
+        <div class="recorder-panel">
+          <div class="wave-wrap"><div id="dogWave" class="wave">• • • • • • • • • • • •</div></div>
+          <div id="dogStatus" class="status"><span class="status-dot"></span> Ready to listen</div>
         </div>
         <div class="button-row">
-          <button id="dogRecordBtn">🎙️ Start Dog Recording</button>
-          <button id="dogStopBtn" class="secondary" disabled>⏹ Stop</button>
+          <button id="dogRecordBtn" class="primary-button"><span>🎙️</span> Start recording</button>
+          <button id="dogStopBtn" class="secondary" disabled><span>■</span> Stop</button>
         </div>
         <audio id="dogPreview" controls class="audio hidden"></audio>
         <div id="dogResult" class="result hidden"></div>
       </article>
 
-      <article class="card">
-        <div class="card-head">
-          <span class="icon">🧑</span>
-          <div><h2>Human Voice → Dog Voice</h2><p>Speak a command and generate a consistent dog-training cue sound.</p></div>
+      <article class="translator-card human-card">
+        <div class="card-top"><div class="direction human-direction">HUMAN → DOG</div><div class="card-icon">🧑</div></div>
+        <h2>How would a dog say it?</h2>
+        <p class="card-description">Speak a complete sentence. DogTalk converts the meaning into a sequence of dog-like vocal patterns.</p>
+        <div class="recorder-panel">
+          <div class="wave-wrap"><div id="humanWave" class="wave">• • • • • • • • • • • •</div></div>
+          <div id="humanStatus" class="status"><span class="status-dot"></span> Microphone ready</div>
         </div>
-        <div class="voice-box">
-          <div id="humanWave" class="wave">● ● ● ● ● ● ● ● ●</div>
-          <div id="humanStatus" class="status">Microphone ready</div>
-        </div>
-        <div class="transcript" id="transcript">Your spoken command will appear here.</div>
+        <div class="transcript" id="transcript">Your spoken sentence will appear here…</div>
         <div class="button-row">
-          <button id="humanRecordBtn">🎤 Speak to Dog</button>
-          <button id="humanStopBtn" class="secondary" disabled>⏹ Stop</button>
+          <button id="humanRecordBtn" class="primary-button"><span>🎤</span> Speak to dog</button>
+          <button id="humanStopBtn" class="secondary" disabled><span>■</span> Stop</button>
         </div>
         <div id="humanResult" class="result hidden"></div>
       </article>
     </section>
 
-    <section class="how-it-works">
-      <h2>How the voice converter works</h2>
-      <div class="steps">
-        <div><b>01</b><span>🎤 Voice input</span></div>
-        <div><b>02</b><span>🧠 Audio analysis</span></div>
-        <div><b>03</b><span>🤖 Interpretation</span></div>
-        <div><b>04</b><span>🔊 Voice/audio output</span></div>
+    <section class="flow-section">
+      <div class="section-heading"><div><span class="section-label">UNDER THE HOOD</span><h2>From voice to vocalization</h2></div><span class="flow-badge">4 stages</span></div>
+      <div class="flow">
+        <div class="flow-item"><span class="flow-number">01</span><div class="flow-icon">🎤</div><strong>Voice input</strong><small>Speak or record</small></div>
+        <div class="connector"></div>
+        <div class="flow-item"><span class="flow-number">02</span><div class="flow-icon">〰️</div><strong>Audio analysis</strong><small>Pitch & energy</small></div>
+        <div class="connector"></div>
+        <div class="flow-item"><span class="flow-number">03</span><div class="flow-icon">🧠</div><strong>AI interpretation</strong><small>Meaning & intent</small></div>
+        <div class="connector"></div>
+        <div class="flow-item"><span class="flow-number">04</span><div class="flow-icon">🔊</div><strong>Dog vocal output</strong><small>Bark pattern</small></div>
       </div>
     </section>
 
-    <footer>DogTalk AI • Voice-to-Voice MVP v0.2</footer>
+    <footer><span>🐾 DogTalk AI</span><span>Built as an experimental voice communication lab</span><span>v0.2</span></footer>
   </main>
   <script src="app.js"></script>
 </body>
