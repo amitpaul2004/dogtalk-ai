@@ -103,7 +103,7 @@ $('dogRecordBtn').addEventListener('click', async () => {
 
       setRecordingUI('dogWave', 'dogStatus', false, 'Analyzing dog sound...');
       $('dogResult').classList.remove('hidden');
-      $('dogResult').innerHTML = '<p>🧠 Listening to the dog sound...</p>';
+      $('dogResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Listening to the dog sound...</p>';
 
       try {
         const form = new FormData();
@@ -114,7 +114,7 @@ $('dogRecordBtn').addEventListener('click', async () => {
 
         const message = `Your dog may be ${data.label.toLowerCase()}. ${data.explanation}`;
         $('dogResult').innerHTML = `
-          <h3>🗣️ Human interpretation</h3>
+          <h3><i class="bi bi-chat-square-text-fill"></i> Human interpretation</h3>
           <p>${message}</p>
           <p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p>
           <div class="stats">
@@ -126,7 +126,7 @@ $('dogRecordBtn').addEventListener('click', async () => {
         speakHuman(message);
         setRecordingUI('dogWave', 'dogStatus', false, 'Done — interpretation spoken aloud');
       } catch (error) {
-        $('dogResult').innerHTML = `<p>❌ ${error.message}</p>`;
+        $('dogResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
         setRecordingUI('dogWave', 'dogStatus', false, 'Analysis failed');
       }
     };
@@ -137,7 +137,7 @@ $('dogRecordBtn').addEventListener('click', async () => {
     setRecordingUI('dogWave', 'dogStatus', true, 'Listening to dog... bark now');
   } catch (error) {
     $('dogResult').classList.remove('hidden');
-    $('dogResult').innerHTML = `<p>❌ ${error.message}</p>`;
+    $('dogResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
   }
 });
 
@@ -180,12 +180,12 @@ $('humanRecordBtn').addEventListener('click', async () => {
 
       const text = transcript.trim();
       if (!text) {
-        $('humanResult').innerHTML = '<p>❌ I could not understand your voice. Please speak clearly and try again.</p>';
+        $('humanResult').innerHTML = '<p><i class="bi bi-x-circle-fill"></i> I could not understand your voice. Please speak clearly and try again.</p>';
         setRecordingUI('humanWave', 'humanStatus', false, 'No speech detected');
         return;
       }
 
-      $('humanResult').innerHTML = '<p>🧠 Converting the complete sentence into a dog vocalization...</p>';
+      $('humanResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Converting the complete sentence into a dog vocalization...</p>';
       try {
         const response = await fetch(`${API}/api/human-to-dog`, {
           method: 'POST',
@@ -196,17 +196,17 @@ $('humanRecordBtn').addEventListener('click', async () => {
         if (!response.ok) throw new Error(data.detail || 'Voice conversion failed');
 
         $('humanResult').innerHTML = `
-          <h3>🐕 Dog vocalization generated</h3>
+          <h3><i class="bi bi-soundwave"></i> Dog vocalization generated</h3>
           <p><strong>Human said:</strong> ${text}</p>
           <p><strong>Interpreted intent:</strong> ${data.cue}</p>
           <p><strong>Pattern:</strong> ${wordCountDescription(text)}</p>
           <p>${data.tip}</p>
-          <button id="playCueBtn" type="button">🐕🔊 Play Dog Vocalization</button>
+          <button id="playCueBtn" type="button"><i class="bi bi-volume-up-fill"></i> Play Dog Vocalization</button>
           <p><small>This is a synthetic bark encoding of the sentence, not a proven translation into dog language.</small></p>`;
         $('playCueBtn').addEventListener('click', () => playDogVoice(text, data.cue));
         setRecordingUI('humanWave', 'humanStatus', false, 'Done — dog vocalization ready');
       } catch (error) {
-        $('humanResult').innerHTML = `<p>❌ ${error.message}</p>`;
+        $('humanResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
         setRecordingUI('humanWave', 'humanStatus', false, 'Conversion failed');
       }
     };
@@ -221,7 +221,7 @@ $('humanRecordBtn').addEventListener('click', async () => {
     setRecordingUI('humanWave', 'humanStatus', true, 'Listening to you... speak the full sentence');
   } catch (error) {
     $('humanResult').classList.remove('hidden');
-    $('humanResult').innerHTML = `<p>❌ ${error.message}</p>`;
+    $('humanResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
   }
 });
 
