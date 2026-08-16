@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -26,7 +27,7 @@
         <div class="eyebrow"><span></span> HUMAN ↔ DOG COMMUNICATION</div>
         <h1>Talk human.<br><em>Hear dog.</em></h1>
         <p class="hero-text">A voice-to-voice experiment that turns human speech into dog-like vocal patterns and interprets dog sounds into human-readable meaning.</p>
-        <div class="hero-meta"><span>🎙️ Microphone ready</span><span>⚡ Real-time prototype</span><span>🔊 Audio output</span></div>
+        <div class="hero-meta"><span><i class="bi bi-mic-fill"></i> Microphone ready</span><span><i class="bi bi-lightning-charge-fill"></i> Real-time prototype</span><span><i class="bi bi-volume-up-fill"></i> Audio output</span></div>
       </div>
       <div class="hero-orbit" aria-hidden="true">
         <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
@@ -34,7 +35,7 @@
       </div>
     </header>
 
-    <div class="notice"><span>⚠️</span><div><strong>Experimental AI prototype</strong><p>This is not a scientifically verified dog-language translator. Outputs represent a repeatable vocalization/behavioral interpretation.</p></div></div>
+    <div class="notice"><span><i class="bi bi-exclamation-triangle-fill"></i></span><div><strong>Experimental AI prototype</strong><p>This is not a scientifically verified dog-language translator. Outputs represent a repeatable vocalization/behavioral interpretation.</p></div></div>
 
     <section class="translator-grid">
       <article class="translator-card dog-card">
@@ -42,7 +43,7 @@
         <h2>What is your dog saying?</h2>
         <p class="card-description">Record a bark, whine or growl. DogTalk analyzes the sound and speaks a human interpretation.</p>
         <div class="recorder-panel"><div class="wave-wrap"><div id="dogWave" class="wave">• • • • • • • • • • • •</div></div><div id="dogStatus" class="status"><span class="status-dot"></span> Ready to listen</div></div>
-        <div class="button-row"><button id="dogRecordBtn" class="primary-button"><span>🎙️</span> Start recording</button><button id="dogStopBtn" class="secondary" disabled><span>■</span> Stop</button></div>
+        <div class="button-row"><button id="dogRecordBtn" class="primary-button"><span><i class="bi bi-mic-fill"></i></span> Start recording</button><button id="dogStopBtn" class="secondary" disabled><span><i class="bi bi-stop-fill"></i></span> Stop</button></div>
         <audio id="dogPreview" controls class="audio hidden"></audio><div id="dogResult" class="result hidden"></div>
       </article>
 
@@ -52,7 +53,7 @@
         <p class="card-description">Speak a complete sentence. DogTalk converts the meaning into a sequence of dog-like vocal patterns.</p>
         <div class="recorder-panel"><div class="wave-wrap"><div id="humanWave" class="wave">• • • • • • • • • • • •</div></div><div id="humanStatus" class="status"><span class="status-dot"></span> Microphone ready</div></div>
         <div class="transcript" id="transcript">Your spoken sentence will appear here…</div>
-        <div class="button-row"><button id="humanRecordBtn" class="primary-button"><span>🎤</span> Speak to dog</button><button id="humanStopBtn" class="secondary" disabled><span>■</span> Stop</button></div>
+        <div class="button-row"><button id="humanRecordBtn" class="primary-button"><span><i class="bi bi-mic-fill"></i></span> Speak to dog</button><button id="humanStopBtn" class="secondary" disabled><span><i class="bi bi-stop-fill"></i></span> Stop</button></div>
         <div id="humanResult" class="result hidden"></div>
       </article>
     </section>
@@ -60,10 +61,10 @@
     <section class="flow-section">
       <div class="section-heading"><div><span class="section-label">UNDER THE HOOD</span><h2>From voice to vocalization</h2></div><span class="flow-badge">4 stages</span></div>
       <div class="flow">
-        <div class="flow-item"><span class="flow-number">01</span><div class="flow-icon">🎤</div><strong>Voice input</strong><small>Speak or record</small></div><div class="connector"></div>
-        <div class="flow-item"><span class="flow-number">02</span><div class="flow-icon">〰️</div><strong>Audio analysis</strong><small>Pitch & energy</small></div><div class="connector"></div>
-        <div class="flow-item"><span class="flow-number">03</span><div class="flow-icon">🧠</div><strong>AI interpretation</strong><small>Meaning & intent</small></div><div class="connector"></div>
-        <div class="flow-item"><span class="flow-number">04</span><div class="flow-icon">🔊</div><strong>Dog vocal output</strong><small>Bark pattern</small></div>
+        <div class="flow-item"><span class="flow-number">01</span><div class="flow-icon"><i class="bi bi-mic-fill"></i></div><strong>Voice input</strong><small>Speak or record</small></div><div class="connector"></div>
+        <div class="flow-item"><span class="flow-number">02</span><div class="flow-icon"><i class="bi bi-soundwave"></i></div><strong>Audio analysis</strong><small>Pitch & energy</small></div><div class="connector"></div>
+        <div class="flow-item"><span class="flow-number">03</span><div class="flow-icon"><i class="bi bi-cpu-fill"></i></div><strong>AI interpretation</strong><small>Meaning & intent</small></div><div class="connector"></div>
+        <div class="flow-item"><span class="flow-number">04</span><div class="flow-icon"><i class="bi bi-volume-up-fill"></i></div><strong>Dog vocal output</strong><small>Bark pattern</small></div>
       </div>
     </section>
 
