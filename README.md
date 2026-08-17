@@ -1,4 +1,6 @@
 # 🐶 DogTalk AI
+---
+
 
 A coding-first prototype for Human ↔ Dog communication.
 
