@@ -1,2 +1,6 @@
 cd frontend
 python -m http.server 5501
+
+Open:
+
+http://127.0.0.1:5501/index.html
