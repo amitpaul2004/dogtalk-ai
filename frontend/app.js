@@ -43,7 +43,6 @@ function bark(ctx, start, duration, pitch, volume) {
     const tone = Math.sin(2 * Math.PI * pitch * (0.75 + 0.25 * (1 - t)) * i / sampleRate);
     data[i] = (0.62 * grit + 0.38 * tone) * envelope;
   }
-
   const source = ctx.createBufferSource();
   const filter = ctx.createBiquadFilter();
   const gain = ctx.createGain();
@@ -68,7 +67,6 @@ async function playDogVoice(text, cue) {
   const wordCount = Math.min(Math.max(words.length, 2), 18);
   const base = cue === 'STOP' || cue === 'NO' ? 260 : cue === 'COME' ? 560 : 430;
   const now = ctx.currentTime + 0.04;
-
   for (let i = 0; i < wordCount; i++) {
     const word = words[i % words.length];
     const code = [...word].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
@@ -77,7 +75,6 @@ async function playDogVoice(text, cue) {
     const gap = 0.11 + ((word.length + i) % 4) * 0.035;
     bark(ctx, now + i * (duration + gap), duration, pitch, 0.75);
   }
-
   bark(ctx, now + wordCount * 0.21 + 0.04, 0.16, base + 120, 0.68);
 }
 
@@ -100,29 +97,17 @@ $('dogRecordBtn').addEventListener('click', async () => {
       const url = URL.createObjectURL(blob);
       $('dogPreview').src = url;
       $('dogPreview').classList.remove('hidden');
-
       setRecordingUI('dogWave', 'dogStatus', false, 'Analyzing dog sound...');
       $('dogResult').classList.remove('hidden');
       $('dogResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Listening to the dog sound...</p>';
-
       try {
         const form = new FormData();
         form.append('file', blob, 'dog-recording.webm');
         const response = await fetch(`${API}/api/dog-to-human`, { method: 'POST', body: form });
         const data = await response.json();
         if (!response.ok) throw new Error(data.detail || 'Dog audio analysis failed');
-
         const message = `Your dog may be ${data.label.toLowerCase()}. ${data.explanation}`;
-        $('dogResult').innerHTML = `
-          <h3><i class="bi bi-chat-square-text-fill"></i> Human interpretation</h3>
-          <p>${message}</p>
-          <p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p>
-          <div class="stats">
-            <div class="stat">Pitch: ${data.features.estimated_pitch_hz} Hz</div>
-            <div class="stat">Energy: ${data.features.energy_db} dB</div>
-            <div class="stat">Duration: ${data.features.duration_seconds}s</div>
-            <div class="stat">Bursts: ${data.features.sound_bursts}</div>
-          </div>`;
+        $('dogResult').innerHTML = `<h3><i class="bi bi-chat-square-text-fill"></i> Human interpretation</h3><p>${message}</p><p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p><div class="stats"><div class="stat">Pitch: ${data.features.estimated_pitch_hz} Hz</div><div class="stat">Energy: ${data.features.energy_db} dB</div><div class="stat">Duration: ${data.features.duration_seconds}s</div><div class="stat">Bursts: ${data.features.sound_bursts}</div></div>`;
         speakHuman(message);
         setRecordingUI('dogWave', 'dogStatus', false, 'Done — interpretation spoken aloud');
       } catch (error) {
@@ -130,7 +115,6 @@ $('dogRecordBtn').addEventListener('click', async () => {
         setRecordingUI('dogWave', 'dogStatus', false, 'Analysis failed');
       }
     };
-
     dogRecorder.start();
     $('dogRecordBtn').disabled = true;
     $('dogStopBtn').disabled = false;
@@ -177,32 +161,18 @@ $('humanRecordBtn').addEventListener('click', async () => {
       stream.getTracks().forEach(track => track.stop());
       if (recognition) { try { recognition.stop(); } catch (_) {} }
       $('humanResult').classList.remove('hidden');
-
       const text = transcript.trim();
       if (!text) {
         $('humanResult').innerHTML = '<p><i class="bi bi-x-circle-fill"></i> I could not understand your voice. Please speak clearly and try again.</p>';
         setRecordingUI('humanWave', 'humanStatus', false, 'No speech detected');
         return;
       }
-
       $('humanResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Converting the complete sentence into a dog vocalization...</p>';
       try {
-        const response = await fetch(`${API}/api/human-to-dog`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
+        const response = await fetch(`${API}/api/human-to-dog`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.detail || 'Voice conversion failed');
-
-        $('humanResult').innerHTML = `
-          <h3><i class="bi bi-soundwave"></i> Dog vocalization generated</h3>
-          <p><strong>Human said:</strong> ${text}</p>
-          <p><strong>Interpreted intent:</strong> ${data.cue}</p>
-          <p><strong>Pattern:</strong> ${wordCountDescription(text)}</p>
-          <p>${data.tip}</p>
-          <button id="playCueBtn" type="button"><i class="bi bi-volume-up-fill"></i> Play Dog Vocalization</button>
-          <p><small>This is a synthetic bark encoding of the sentence, not a proven translation into dog language.</small></p>`;
+        $('humanResult').innerHTML = `<h3><i class="bi bi-soundwave"></i> Dog vocalization generated</h3><p><strong>Human said:</strong> ${text}</p><p><strong>Interpreted intent:</strong> ${data.cue}</p><p><strong>Pattern:</strong> ${wordCountDescription(text)}</p><p>${data.tip}</p><button id="playCueBtn" type="button"><i class="bi bi-volume-up-fill"></i> Play Dog Vocalization</button><p><small>This is a synthetic bark encoding of the sentence, not a proven translation into dog language.</small></p>`;
         $('playCueBtn').addEventListener('click', () => playDogVoice(text, data.cue));
         setRecordingUI('humanWave', 'humanStatus', false, 'Done — dog vocalization ready');
       } catch (error) {
@@ -210,12 +180,9 @@ $('humanRecordBtn').addEventListener('click', async () => {
         setRecordingUI('humanWave', 'humanStatus', false, 'Conversion failed');
       }
     };
-
     humanRecorder.start();
     recognition = setupSpeechRecognition();
-    if (recognition) {
-      try { recognition.start(); } catch (_) {}
-    }
+    if (recognition) { try { recognition.start(); } catch (_) {} }
     $('humanRecordBtn').disabled = true;
     $('humanStopBtn').disabled = false;
     setRecordingUI('humanWave', 'humanStatus', true, 'Listening to you... speak the full sentence');
