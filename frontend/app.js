@@ -1,4 +1,10 @@
-const API = 'http://127.0.0.1:8000';
+const API = (() => {
+  const configured = window.DOGTALK_API_URL?.trim();
+  if (configured) return configured.replace(/\/$/, '');
+  const host = window.location.hostname;
+  const isLocalFrontend = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '';
+  return isLocalFrontend ? 'http://127.0.0.1:8000' : '';
+})();
 
 const $ = (id) => document.getElementById(id);
 let dogRecorder = null;
@@ -12,6 +18,29 @@ let audioContext = null;
 function setRecordingUI(waveId, statusId, active, message) {
   $(waveId).classList.toggle('active', active);
   $(statusId).textContent = message;
+}
+
+function apiUrl(path) {
+  return `${API}${path}`;
+}
+
+async function fetchJson(path, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(apiUrl(path), { ...options, signal: controller.signal });
+    const raw = await response.text();
+    let data = {};
+    try { data = raw ? JSON.parse(raw) : {}; } catch (_) {}
+    if (!response.ok) throw new Error(data.detail || `Request failed (${response.status})`);
+    return data;
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('The server took too long to respond. Make sure the DogTalk backend is running.');
+    if (error instanceof TypeError) throw new Error('Cannot connect to the DogTalk backend. The browser will use local fallback analysis where available.');
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 function speakHuman(text) {
@@ -79,10 +108,73 @@ async function playDogVoice(text, cue) {
 }
 
 async function getMicrophone() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error('Your browser does not support microphone recording. Use Chrome or Edge over localhost.');
-  }
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Your browser does not support microphone recording. Use Chrome or Edge over localhost.');
   return navigator.mediaDevices.getUserMedia({ audio: true });
+}
+
+async function analyzeDogAudioLocally(blob) {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) throw new Error('Local audio analysis is not supported by this browser.');
+  const ctx = new Ctx();
+  try {
+    const buffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const data = buffer.getChannelData(0);
+    const sampleRate = buffer.sampleRate;
+    const duration = buffer.duration;
+    if (!data.length) throw new Error('The recording is empty.');
+
+    let sumSquares = 0;
+    let zeroCrossings = 0;
+    let previous = data[0];
+    const frameSize = Math.max(256, Math.floor(sampleRate * 0.03));
+    const energies = [];
+    for (let i = 0; i < data.length; i++) {
+      const sample = data[i];
+      sumSquares += sample * sample;
+      if ((sample >= 0 && previous < 0) || (sample < 0 && previous >= 0)) zeroCrossings++;
+      previous = sample;
+      if (i % frameSize === 0) {
+        let frameSum = 0;
+        const end = Math.min(i + frameSize, data.length);
+        for (let j = i; j < end; j++) frameSum += data[j] * data[j];
+        energies.push(Math.sqrt(frameSum / Math.max(1, end - i)));
+      }
+    }
+    const rms = Math.sqrt(sumSquares / data.length);
+    const energyDb = 20 * Math.log10(Math.max(rms, 1e-8));
+    const pitchHz = Math.max(70, Math.min(1200, (zeroCrossings / 2) / Math.max(duration, 0.01)));
+    const threshold = Math.max(energies.length ? percentile(energies, 70) : 0.01, 0.001);
+    let bursts = 0;
+    let active = false;
+    energies.forEach((energy) => {
+      const nowActive = energy > threshold;
+      if (nowActive && !active) bursts++;
+      active = nowActive;
+    });
+
+    let label = 'Uncertain / needs more context';
+    let explanation = 'The acoustic features do not strongly match the prototype categories.';
+    let confidence = 0.40;
+    if (pitchHz >= 500 && bursts >= 3 && energyDb > -25) {
+      label = 'Excited / playful'; explanation = 'The sound has relatively high pitch, energy and repeated bursts.'; confidence = 0.68;
+    } else if (pitchHz >= 400 && energyDb < -30) {
+      label = 'Attention seeking / whiny'; explanation = 'The sound is relatively high-pitched but low in energy.'; confidence = 0.62;
+    } else if (energyDb > -18 && pitchHz < 350) {
+      label = 'Alert / intense'; explanation = 'The recording has strong energy and a comparatively lower pitch.'; confidence = 0.64;
+    } else if (duration > 2.5 && energyDb < -28) {
+      label = 'Possibly anxious / distressed'; explanation = 'The sound is sustained and relatively quiet; context is important.'; confidence = 0.52;
+    }
+    return { label, explanation, confidence, features: { duration_seconds: Number(duration.toFixed(2)), sample_rate: sampleRate, estimated_pitch_hz: Number(pitchHz.toFixed(1)), energy_db: Number(energyDb.toFixed(2)), sound_bursts: bursts } };
+  } finally {
+    await ctx.close();
+  }
+}
+
+function percentile(values, p) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  return sorted[index];
 }
 
 $('dogRecordBtn').addEventListener('click', async () => {
@@ -94,8 +186,7 @@ $('dogRecordBtn').addEventListener('click', async () => {
     dogRecorder.onstop = async () => {
       stream.getTracks().forEach(track => track.stop());
       const blob = new Blob(dogChunks, { type: dogRecorder.mimeType || 'audio/webm' });
-      const url = URL.createObjectURL(blob);
-      $('dogPreview').src = url;
+      $('dogPreview').src = URL.createObjectURL(blob);
       $('dogPreview').classList.remove('hidden');
       setRecordingUI('dogWave', 'dogStatus', false, 'Analyzing dog sound...');
       $('dogResult').classList.remove('hidden');
@@ -103,9 +194,12 @@ $('dogRecordBtn').addEventListener('click', async () => {
       try {
         const form = new FormData();
         form.append('file', blob, 'dog-recording.webm');
-        const response = await fetch(`${API}/api/dog-to-human`, { method: 'POST', body: form });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.detail || 'Dog audio analysis failed');
+        let data;
+        try {
+          data = await fetchJson('/api/dog-to-human', { method: 'POST', body: form });
+        } catch (_) {
+          data = await analyzeDogAudioLocally(blob);
+        }
         const message = `Your dog may be ${data.label.toLowerCase()}. ${data.explanation}`;
         $('dogResult').innerHTML = `<h3><i class="bi bi-chat-square-text-fill"></i> Human interpretation</h3><p>${message}</p><p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p><div class="stats"><div class="stat">Pitch: ${data.features.estimated_pitch_hz} Hz</div><div class="stat">Energy: ${data.features.energy_db} dB</div><div class="stat">Duration: ${data.features.duration_seconds}s</div><div class="stat">Bursts: ${data.features.sound_bursts}</div></div>`;
         speakHuman(message);
@@ -148,6 +242,13 @@ function setupSpeechRecognition() {
   return r;
 }
 
+function localHumanToDog(text) {
+  const normalized = text.toLowerCase();
+  const cues = [['sit', ['SIT', 'Use one consistent word and reward immediately.']], ['stay', ['STAY', 'Keep the cue short and reinforce calm behavior.']], ['come', ['COME', 'Use a happy voice and reward when the dog reaches you.']], ['stop', ['STOP', 'Avoid shouting; use the same cue consistently.']], ['down', ['DOWN', 'Pair the cue with a hand signal during training.']], ['no', ['NO', 'Redirect to an acceptable behavior instead of repeating the cue.']]];
+  const match = cues.find(([key]) => normalized.includes(key));
+  return match ? { cue: match[1][0], tip: match[1][1] } : { cue: 'CUSTOM', tip: 'Use a short, consistent cue and reward the behavior you want.' };
+}
+
 $('humanRecordBtn').addEventListener('click', async () => {
   try {
     await getAudioContext();
@@ -163,15 +264,18 @@ $('humanRecordBtn').addEventListener('click', async () => {
       $('humanResult').classList.remove('hidden');
       const text = transcript.trim();
       if (!text) {
-        $('humanResult').innerHTML = '<p><i class="bi bi-x-circle-fill"></i> I could not understand your voice. Please speak clearly and try again.</p>';
+        $('humanResult').innerHTML = '<p><i class="bi bi-x-circle-fill"></i> No speech was detected. Allow microphone access and speak clearly while the browser is listening.</p>';
         setRecordingUI('humanWave', 'humanStatus', false, 'No speech detected');
         return;
       }
       $('humanResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Converting the complete sentence into a dog vocalization...</p>';
       try {
-        const response = await fetch(`${API}/api/human-to-dog`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.detail || 'Voice conversion failed');
+        let data;
+        try {
+          data = await fetchJson('/api/human-to-dog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+        } catch (_) {
+          data = localHumanToDog(text);
+        }
         $('humanResult').innerHTML = `<h3><i class="bi bi-soundwave"></i> Dog vocalization generated</h3><p><strong>Human said:</strong> ${text}</p><p><strong>Interpreted intent:</strong> ${data.cue}</p><p><strong>Pattern:</strong> ${wordCountDescription(text)}</p><p>${data.tip}</p><button id="playCueBtn" type="button"><i class="bi bi-volume-up-fill"></i> Play Dog Vocalization</button><p><small>This is a synthetic bark encoding of the sentence, not a proven translation into dog language.</small></p>`;
         $('playCueBtn').addEventListener('click', () => playDogVoice(text, data.cue));
         setRecordingUI('humanWave', 'humanStatus', false, 'Done — dog vocalization ready');
