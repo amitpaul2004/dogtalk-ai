@@ -36,9 +36,7 @@ async function fetchJson(path, options = {}, timeoutMs = 15000) {
     return data;
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('The server took too long to respond. Make sure the DogTalk backend is running.');
-    if (error instanceof TypeError) {
-      throw new Error('Cannot connect to the DogTalk backend. Start FastAPI on http://127.0.0.1:8000 or configure DOGTALK_API_URL.');
-    }
+    if (error instanceof TypeError) throw new Error('Cannot connect to the DogTalk backend. The browser will use local fallback analysis where available.');
     throw error;
   } finally {
     window.clearTimeout(timeout);
@@ -110,10 +108,73 @@ async function playDogVoice(text, cue) {
 }
 
 async function getMicrophone() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error('Your browser does not support microphone recording. Use Chrome or Edge over localhost.');
-  }
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Your browser does not support microphone recording. Use Chrome or Edge over localhost.');
   return navigator.mediaDevices.getUserMedia({ audio: true });
+}
+
+async function analyzeDogAudioLocally(blob) {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) throw new Error('Local audio analysis is not supported by this browser.');
+  const ctx = new Ctx();
+  try {
+    const buffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const data = buffer.getChannelData(0);
+    const sampleRate = buffer.sampleRate;
+    const duration = buffer.duration;
+    if (!data.length) throw new Error('The recording is empty.');
+
+    let sumSquares = 0;
+    let zeroCrossings = 0;
+    let previous = data[0];
+    const frameSize = Math.max(256, Math.floor(sampleRate * 0.03));
+    const energies = [];
+    for (let i = 0; i < data.length; i++) {
+      const sample = data[i];
+      sumSquares += sample * sample;
+      if ((sample >= 0 && previous < 0) || (sample < 0 && previous >= 0)) zeroCrossings++;
+      previous = sample;
+      if (i % frameSize === 0) {
+        let frameSum = 0;
+        const end = Math.min(i + frameSize, data.length);
+        for (let j = i; j < end; j++) frameSum += data[j] * data[j];
+        energies.push(Math.sqrt(frameSum / Math.max(1, end - i)));
+      }
+    }
+    const rms = Math.sqrt(sumSquares / data.length);
+    const energyDb = 20 * Math.log10(Math.max(rms, 1e-8));
+    const pitchHz = Math.max(70, Math.min(1200, (zeroCrossings / 2) / Math.max(duration, 0.01)));
+    const threshold = Math.max(energies.length ? percentile(energies, 70) : 0.01, 0.001);
+    let bursts = 0;
+    let active = false;
+    energies.forEach((energy) => {
+      const nowActive = energy > threshold;
+      if (nowActive && !active) bursts++;
+      active = nowActive;
+    });
+
+    let label = 'Uncertain / needs more context';
+    let explanation = 'The acoustic features do not strongly match the prototype categories.';
+    let confidence = 0.40;
+    if (pitchHz >= 500 && bursts >= 3 && energyDb > -25) {
+      label = 'Excited / playful'; explanation = 'The sound has relatively high pitch, energy and repeated bursts.'; confidence = 0.68;
+    } else if (pitchHz >= 400 && energyDb < -30) {
+      label = 'Attention seeking / whiny'; explanation = 'The sound is relatively high-pitched but low in energy.'; confidence = 0.62;
+    } else if (energyDb > -18 && pitchHz < 350) {
+      label = 'Alert / intense'; explanation = 'The recording has strong energy and a comparatively lower pitch.'; confidence = 0.64;
+    } else if (duration > 2.5 && energyDb < -28) {
+      label = 'Possibly anxious / distressed'; explanation = 'The sound is sustained and relatively quiet; context is important.'; confidence = 0.52;
+    }
+    return { label, explanation, confidence, features: { duration_seconds: Number(duration.toFixed(2)), sample_rate: sampleRate, estimated_pitch_hz: Number(pitchHz.toFixed(1)), energy_db: Number(energyDb.toFixed(2)), sound_bursts: bursts } };
+  } finally {
+    await ctx.close();
+  }
+}
+
+function percentile(values, p) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  return sorted[index];
 }
 
 $('dogRecordBtn').addEventListener('click', async () => {
@@ -125,8 +186,7 @@ $('dogRecordBtn').addEventListener('click', async () => {
     dogRecorder.onstop = async () => {
       stream.getTracks().forEach(track => track.stop());
       const blob = new Blob(dogChunks, { type: dogRecorder.mimeType || 'audio/webm' });
-      const url = URL.createObjectURL(blob);
-      $('dogPreview').src = url;
+      $('dogPreview').src = URL.createObjectURL(blob);
       $('dogPreview').classList.remove('hidden');
       setRecordingUI('dogWave', 'dogStatus', false, 'Analyzing dog sound...');
       $('dogResult').classList.remove('hidden');
@@ -134,7 +194,12 @@ $('dogRecordBtn').addEventListener('click', async () => {
       try {
         const form = new FormData();
         form.append('file', blob, 'dog-recording.webm');
-        const data = await fetchJson('/api/dog-to-human', { method: 'POST', body: form });
+        let data;
+        try {
+          data = await fetchJson('/api/dog-to-human', { method: 'POST', body: form });
+        } catch (_) {
+          data = await analyzeDogAudioLocally(blob);
+        }
         const message = `Your dog may be ${data.label.toLowerCase()}. ${data.explanation}`;
         $('dogResult').innerHTML = `<h3><i class="bi bi-chat-square-text-fill"></i> Human interpretation</h3><p>${message}</p><p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p><div class="stats"><div class="stat">Pitch: ${data.features.estimated_pitch_hz} Hz</div><div class="stat">Energy: ${data.features.energy_db} dB</div><div class="stat">Duration: ${data.features.duration_seconds}s</div><div class="stat">Bursts: ${data.features.sound_bursts}</div></div>`;
         speakHuman(message);
@@ -179,20 +244,9 @@ function setupSpeechRecognition() {
 
 function localHumanToDog(text) {
   const normalized = text.toLowerCase();
-  const cues = [
-    ['sit', { cue: 'SIT', tip: 'Use one consistent word and reward immediately.' }],
-    ['stay', { cue: 'STAY', tip: 'Keep the cue short and reinforce calm behavior.' }],
-    ['come', { cue: 'COME', tip: 'Use a happy voice and reward when the dog reaches you.' }],
-    ['stop', { cue: 'STOP', tip: 'Avoid shouting; use the same cue consistently.' }],
-    ['down', { cue: 'DOWN', tip: 'Pair the cue with a hand signal during training.' }],
-    ['no', { cue: 'NO', tip: 'Redirect to an acceptable behavior instead of repeating the cue.' }]
-  ];
+  const cues = [['sit', ['SIT', 'Use one consistent word and reward immediately.']], ['stay', ['STAY', 'Keep the cue short and reinforce calm behavior.']], ['come', ['COME', 'Use a happy voice and reward when the dog reaches you.']], ['stop', ['STOP', 'Avoid shouting; use the same cue consistently.']], ['down', ['DOWN', 'Pair the cue with a hand signal during training.']], ['no', ['NO', 'Redirect to an acceptable behavior instead of repeating the cue.']]];
   const match = cues.find(([key]) => normalized.includes(key));
-  return match ? { ...match[1], matched_command: match[0] } : {
-    cue: 'CUSTOM',
-    tip: 'Use a short, consistent cue and reward the behavior you want.',
-    matched_command: null
-  };
+  return match ? { cue: match[1][0], tip: match[1][1] } : { cue: 'CUSTOM', tip: 'Use a short, consistent cue and reward the behavior you want.' };
 }
 
 $('humanRecordBtn').addEventListener('click', async () => {
@@ -232,9 +286,7 @@ $('humanRecordBtn').addEventListener('click', async () => {
     };
     humanRecorder.start();
     recognition = setupSpeechRecognition();
-    if (recognition) {
-      try { recognition.start(); } catch (_) {}
-    }
+    if (recognition) { try { recognition.start(); } catch (_) {} }
     $('humanRecordBtn').disabled = true;
     $('humanStopBtn').disabled = false;
     setRecordingUI('humanWave', 'humanStatus', true, 'Listening to you... speak the full sentence');
