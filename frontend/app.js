@@ -2,31 +2,22 @@ const API = (() => {
   const configured = window.DOGTALK_API_URL?.trim();
   if (configured) return configured.replace(/\/$/, '');
   const host = window.location.hostname;
-  const isLocalFrontend = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '';
-  return isLocalFrontend ? 'http://127.0.0.1:8000' : '';
+  return ['localhost', '127.0.0.1', '::1', ''].includes(host) ? 'http://127.0.0.1:8000' : '';
 })();
 
-const $ = (id) => document.getElementById(id);
-let dogRecorder = null;
-let dogChunks = [];
-let humanRecorder = null;
-let humanChunks = [];
-let recognition = null;
-let transcript = '';
-let audioContext = null;
+// Real recorded dog bark. This replaces the previous Web Audio synthetic tone.
+const REAL_DOG_BARK_URL = 'https://orangefreesounds.com/wp-content/uploads/2026/04/Dog-barking-sound-effect-loud-natural-bark.mp3';
+const $ = id => document.getElementById(id);
+let dogRecorder = null, dogChunks = [], humanRecorder = null, recognition = null, transcript = '';
 
 function setRecordingUI(waveId, statusId, active, message) {
   $(waveId).classList.toggle('active', active);
   $(statusId).textContent = message;
 }
-
-function apiUrl(path) {
-  return `${API}${path}`;
-}
-
+function apiUrl(path) { return `${API}${path}`; }
 async function fetchJson(path, options = {}, timeoutMs = 15000) {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(apiUrl(path), { ...options, signal: controller.signal });
     const raw = await response.text();
@@ -35,76 +26,38 @@ async function fetchJson(path, options = {}, timeoutMs = 15000) {
     if (!response.ok) throw new Error(data.detail || `Request failed (${response.status})`);
     return data;
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error('The server took too long to respond. Make sure the DogTalk backend is running.');
-    if (error instanceof TypeError) throw new Error('Cannot connect to the DogTalk backend. The browser will use local fallback analysis where available.');
+    if (error.name === 'AbortError') throw new Error('The DogTalk backend took too long to respond.');
+    if (error instanceof TypeError) throw new Error('Cannot connect to the DogTalk backend.');
     throw error;
-  } finally {
-    window.clearTimeout(timeout);
-  }
+  } finally { clearTimeout(timer); }
 }
-
 function speakHuman(text) {
   if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
+  speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.95;
   utterance.pitch = 1;
-  window.speechSynthesis.speak(utterance);
+  speechSynthesis.speak(utterance);
 }
 
-function getAudioContext() {
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!Ctx) throw new Error('Web Audio is not supported in this browser.');
-  if (!audioContext) audioContext = new Ctx();
-  if (audioContext.state === 'suspended') return audioContext.resume().then(() => audioContext);
-  return Promise.resolve(audioContext);
-}
-
-function bark(ctx, start, duration, pitch, volume) {
-  const sampleRate = ctx.sampleRate;
-  const length = Math.max(1, Math.floor(sampleRate * duration));
-  const buffer = ctx.createBuffer(1, length, sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < length; i++) {
-    const t = i / length;
-    const envelope = Math.sin(Math.PI * Math.min(1, t * 1.15)) ** 0.7;
-    const grit = (Math.random() * 2 - 1) * envelope;
-    const tone = Math.sin(2 * Math.PI * pitch * (0.75 + 0.25 * (1 - t)) * i / sampleRate);
-    data[i] = (0.62 * grit + 0.38 * tone) * envelope;
-  }
-  const source = ctx.createBufferSource();
-  const filter = ctx.createBiquadFilter();
-  const gain = ctx.createGain();
-  filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(Math.min(2600, pitch * 3.2), start);
-  filter.Q.value = 1.1;
-  gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
-  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  source.buffer = buffer;
-  source.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-  source.start(start);
-  source.stop(start + duration + 0.02);
-}
-
-async function playDogVoice(text, cue) {
-  const ctx = await getAudioContext();
-  const normalized = (text || '').trim();
-  const words = normalized ? normalized.split(/\s+/).filter(Boolean) : [cue || 'CUSTOM'];
-  const wordCount = Math.min(Math.max(words.length, 2), 18);
-  const base = cue === 'STOP' || cue === 'NO' ? 260 : cue === 'COME' ? 560 : 430;
-  const now = ctx.currentTime + 0.04;
-  for (let i = 0; i < wordCount; i++) {
-    const word = words[i % words.length];
-    const code = [...word].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-    const pitch = Math.max(180, Math.min(950, base + (code % 260) - 90));
-    const duration = 0.12 + ((code % 7) * 0.018);
-    const gap = 0.11 + ((word.length + i) % 4) * 0.035;
-    bark(ctx, now + i * (duration + gap), duration, pitch, 0.75);
-  }
-  bark(ctx, now + wordCount * 0.21 + 0.04, 0.16, base + 120, 0.68);
+// Play a real dog recording. The sentence controls the number of bark repetitions,
+// but the sound itself is never synthesized or generated by an oscillator.
+function playRealDogBark(text, cue) {
+  const count = Math.min(Math.max((text || '').trim().split(/\s+/).filter(Boolean).length, 1), 5);
+  const gap = cue === 'STOP' || cue === 'NO' ? 420 : cue === 'COME' ? 300 : 360;
+  const playOne = index => {
+    const audio = new Audio(REAL_DOG_BARK_URL);
+    audio.preload = 'auto';
+    audio.volume = cue === 'STOP' || cue === 'NO' ? 0.8 : 0.65;
+    audio.playbackRate = cue === 'COME' ? 1.08 : cue === 'STOP' || cue === 'NO' ? 0.94 : 1;
+    audio.addEventListener('ended', () => {
+      if (index + 1 < count) setTimeout(() => playOne(index + 1), gap);
+    }, { once: true });
+    audio.play().catch(() => {
+      $('humanResult')?.insertAdjacentHTML('beforeend', '<p class="audio-help"><i class="bi bi-info-circle-fill"></i> Tap Play Dog Vocalization again if the browser blocked the audio.</p>');
+    });
+  };
+  playOne(0);
 }
 
 async function getMicrophone() {
@@ -118,191 +71,87 @@ async function analyzeDogAudioLocally(blob) {
   const ctx = new Ctx();
   try {
     const buffer = await ctx.decodeAudioData(await blob.arrayBuffer());
-    const data = buffer.getChannelData(0);
-    const sampleRate = buffer.sampleRate;
-    const duration = buffer.duration;
+    const data = buffer.getChannelData(0), sr = buffer.sampleRate, duration = buffer.duration;
     if (!data.length) throw new Error('The recording is empty.');
-
-    let sumSquares = 0;
-    let zeroCrossings = 0;
-    let previous = data[0];
-    const frameSize = Math.max(256, Math.floor(sampleRate * 0.03));
-    const energies = [];
+    let sum = 0, crossings = 0, previous = data[0];
+    const frame = Math.max(256, Math.floor(sr * 0.03)), energies = [];
     for (let i = 0; i < data.length; i++) {
-      const sample = data[i];
-      sumSquares += sample * sample;
-      if ((sample >= 0 && previous < 0) || (sample < 0 && previous >= 0)) zeroCrossings++;
+      const sample = data[i]; sum += sample * sample;
+      if ((sample >= 0 && previous < 0) || (sample < 0 && previous >= 0)) crossings++;
       previous = sample;
-      if (i % frameSize === 0) {
-        let frameSum = 0;
-        const end = Math.min(i + frameSize, data.length);
-        for (let j = i; j < end; j++) frameSum += data[j] * data[j];
-        energies.push(Math.sqrt(frameSum / Math.max(1, end - i)));
+      if (i % frame === 0) {
+        let total = 0; const end = Math.min(i + frame, data.length);
+        for (let j = i; j < end; j++) total += data[j] * data[j];
+        energies.push(Math.sqrt(total / Math.max(1, end - i)));
       }
     }
-    const rms = Math.sqrt(sumSquares / data.length);
-    const energyDb = 20 * Math.log10(Math.max(rms, 1e-8));
-    const pitchHz = Math.max(70, Math.min(1200, (zeroCrossings / 2) / Math.max(duration, 0.01)));
-    const threshold = Math.max(energies.length ? percentile(energies, 70) : 0.01, 0.001);
-    let bursts = 0;
-    let active = false;
-    energies.forEach((energy) => {
-      const nowActive = energy > threshold;
-      if (nowActive && !active) bursts++;
-      active = nowActive;
-    });
-
-    let label = 'Uncertain / needs more context';
-    let explanation = 'The acoustic features do not strongly match the prototype categories.';
-    let confidence = 0.40;
-    if (pitchHz >= 500 && bursts >= 3 && energyDb > -25) {
-      label = 'Excited / playful'; explanation = 'The sound has relatively high pitch, energy and repeated bursts.'; confidence = 0.68;
-    } else if (pitchHz >= 400 && energyDb < -30) {
-      label = 'Attention seeking / whiny'; explanation = 'The sound is relatively high-pitched but low in energy.'; confidence = 0.62;
-    } else if (energyDb > -18 && pitchHz < 350) {
-      label = 'Alert / intense'; explanation = 'The recording has strong energy and a comparatively lower pitch.'; confidence = 0.64;
-    } else if (duration > 2.5 && energyDb < -28) {
-      label = 'Possibly anxious / distressed'; explanation = 'The sound is sustained and relatively quiet; context is important.'; confidence = 0.52;
-    }
-    return { label, explanation, confidence, features: { duration_seconds: Number(duration.toFixed(2)), sample_rate: sampleRate, estimated_pitch_hz: Number(pitchHz.toFixed(1)), energy_db: Number(energyDb.toFixed(2)), sound_bursts: bursts } };
-  } finally {
-    await ctx.close();
-  }
-}
-
-function percentile(values, p) {
-  if (!values.length) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
-  return sorted[index];
+    const rms = Math.sqrt(sum / data.length), energyDb = 20 * Math.log10(Math.max(rms, 1e-8));
+    const pitch = Math.max(70, Math.min(1200, (crossings / 2) / Math.max(duration, 0.01)));
+    const sorted = [...energies].sort((a, b) => a - b);
+    const threshold = Math.max(sorted[Math.max(0, Math.ceil(sorted.length * 0.7) - 1)] || 0.001, 0.001);
+    let bursts = 0, active = false;
+    energies.forEach(e => { const on = e > threshold; if (on && !active) bursts++; active = on; });
+    let label = 'Uncertain / needs more context', explanation = 'The acoustic features do not strongly match the prototype categories.', confidence = 0.40;
+    if (pitch >= 500 && bursts >= 3 && energyDb > -25) { label = 'Excited / playful'; explanation = 'The sound has relatively high pitch, energy and repeated bursts.'; confidence = 0.68; }
+    else if (pitch >= 400 && energyDb < -30) { label = 'Attention seeking / whiny'; explanation = 'The sound is relatively high-pitched but low in energy.'; confidence = 0.62; }
+    else if (energyDb > -18 && pitch < 350) { label = 'Alert / intense'; explanation = 'The recording has strong energy and a comparatively lower pitch.'; confidence = 0.64; }
+    return { label, explanation, confidence, features: { duration_seconds: +duration.toFixed(2), sample_rate: sr, estimated_pitch_hz: +pitch.toFixed(1), energy_db: +energyDb.toFixed(2), sound_bursts: bursts } };
+  } finally { await ctx.close(); }
 }
 
 $('dogRecordBtn').addEventListener('click', async () => {
   try {
-    const stream = await getMicrophone();
-    dogChunks = [];
-    dogRecorder = new MediaRecorder(stream);
-    dogRecorder.ondataavailable = (event) => { if (event.data.size) dogChunks.push(event.data); };
+    const stream = await getMicrophone(); dogChunks = []; dogRecorder = new MediaRecorder(stream);
+    dogRecorder.ondataavailable = e => { if (e.data.size) dogChunks.push(e.data); };
     dogRecorder.onstop = async () => {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(dogChunks, { type: dogRecorder.mimeType || 'audio/webm' });
-      $('dogPreview').src = URL.createObjectURL(blob);
-      $('dogPreview').classList.remove('hidden');
+      $('dogPreview').src = URL.createObjectURL(blob); $('dogPreview').classList.remove('hidden');
       setRecordingUI('dogWave', 'dogStatus', false, 'Analyzing dog sound...');
-      $('dogResult').classList.remove('hidden');
-      $('dogResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Listening to the dog sound...</p>';
+      $('dogResult').classList.remove('hidden'); $('dogResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Listening to the dog sound...</p>';
       try {
-        const form = new FormData();
-        form.append('file', blob, 'dog-recording.webm');
-        let data;
-        try {
-          data = await fetchJson('/api/dog-to-human', { method: 'POST', body: form });
-        } catch (_) {
-          data = await analyzeDogAudioLocally(blob);
-        }
+        const form = new FormData(); form.append('file', blob, 'dog-recording.webm');
+        let data; try { data = await fetchJson('/api/dog-to-human', { method: 'POST', body: form }); } catch (_) { data = await analyzeDogAudioLocally(blob); }
         const message = `Your dog may be ${data.label.toLowerCase()}. ${data.explanation}`;
         $('dogResult').innerHTML = `<h3><i class="bi bi-chat-square-text-fill"></i> Human interpretation</h3><p>${message}</p><p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p><div class="stats"><div class="stat">Pitch: ${data.features.estimated_pitch_hz} Hz</div><div class="stat">Energy: ${data.features.energy_db} dB</div><div class="stat">Duration: ${data.features.duration_seconds}s</div><div class="stat">Bursts: ${data.features.sound_bursts}</div></div>`;
-        speakHuman(message);
-        setRecordingUI('dogWave', 'dogStatus', false, 'Done — interpretation spoken aloud');
-      } catch (error) {
-        $('dogResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
-        setRecordingUI('dogWave', 'dogStatus', false, 'Analysis failed');
-      }
+        speakHuman(message); setRecordingUI('dogWave', 'dogStatus', false, 'Done — interpretation spoken aloud');
+      } catch (error) { $('dogResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`; setRecordingUI('dogWave', 'dogStatus', false, 'Analysis failed'); }
     };
-    dogRecorder.start();
-    $('dogRecordBtn').disabled = true;
-    $('dogStopBtn').disabled = false;
-    setRecordingUI('dogWave', 'dogStatus', true, 'Listening to dog... bark now');
-  } catch (error) {
-    $('dogResult').classList.remove('hidden');
-    $('dogResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
-  }
+    dogRecorder.start(); $('dogRecordBtn').disabled = true; $('dogStopBtn').disabled = false; setRecordingUI('dogWave', 'dogStatus', true, 'Listening to dog... bark now');
+  } catch (error) { $('dogResult').classList.remove('hidden'); $('dogResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`; }
 });
-
-$('dogStopBtn').addEventListener('click', () => {
-  if (dogRecorder && dogRecorder.state !== 'inactive') dogRecorder.stop();
-  $('dogRecordBtn').disabled = false;
-  $('dogStopBtn').disabled = true;
-});
+$('dogStopBtn').addEventListener('click', () => { if (dogRecorder && dogRecorder.state !== 'inactive') dogRecorder.stop(); $('dogRecordBtn').disabled = false; $('dogStopBtn').disabled = true; });
 
 function setupSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) return null;
-  const r = new SpeechRecognition();
-  r.continuous = true;
-  r.interimResults = true;
-  r.lang = 'en-IN';
-  r.onresult = (event) => {
-    let text = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) text += event.results[i][0].transcript;
-    transcript = text.trim();
-    $('transcript').textContent = transcript || 'Listening...';
-  };
-  r.onerror = () => {};
-  return r;
+  const r = new SpeechRecognition(); r.continuous = true; r.interimResults = true; r.lang = 'en-IN';
+  r.onresult = event => { let text = ''; for (let i = event.resultIndex; i < event.results.length; i++) text += event.results[i][0].transcript; transcript = text.trim(); $('transcript').textContent = transcript || 'Listening...'; };
+  r.onerror = () => {}; return r;
 }
-
 function localHumanToDog(text) {
-  const normalized = text.toLowerCase();
-  const cues = [['sit', ['SIT', 'Use one consistent word and reward immediately.']], ['stay', ['STAY', 'Keep the cue short and reinforce calm behavior.']], ['come', ['COME', 'Use a happy voice and reward when the dog reaches you.']], ['stop', ['STOP', 'Avoid shouting; use the same cue consistently.']], ['down', ['DOWN', 'Pair the cue with a hand signal during training.']], ['no', ['NO', 'Redirect to an acceptable behavior instead of repeating the cue.']]];
-  const match = cues.find(([key]) => normalized.includes(key));
-  return match ? { cue: match[1][0], tip: match[1][1] } : { cue: 'CUSTOM', tip: 'Use a short, consistent cue and reward the behavior you want.' };
+  const t = text.toLowerCase();
+  const cues = [['sit','SIT','Use one consistent word and reward immediately.'],['stay','STAY','Keep the cue short and reinforce calm behavior.'],['come','COME','Use a happy voice and reward when the dog reaches you.'],['stop','STOP','Avoid shouting; use the same cue consistently.'],['down','DOWN','Pair the cue with a hand signal during training.'],['no','NO','Redirect to an acceptable behavior instead of repeating the cue.']];
+  const match = cues.find(([key]) => t.includes(key));
+  return match ? { cue: match[1], tip: match[2] } : { cue: 'CUSTOM', tip: 'Use a short, consistent cue and reward the behavior you want.' };
 }
-
 $('humanRecordBtn').addEventListener('click', async () => {
   try {
-    await getAudioContext();
-    const stream = await getMicrophone();
-    humanChunks = [];
-    transcript = '';
-    $('transcript').textContent = 'Listening to your voice...';
-    humanRecorder = new MediaRecorder(stream);
-    humanRecorder.ondataavailable = (event) => { if (event.data.size) humanChunks.push(event.data); };
+    const stream = await getMicrophone(); transcript = ''; $('transcript').textContent = 'Listening to your voice...'; humanRecorder = new MediaRecorder(stream);
+    humanRecorder.ondataavailable = () => {};
     humanRecorder.onstop = async () => {
-      stream.getTracks().forEach(track => track.stop());
-      if (recognition) { try { recognition.stop(); } catch (_) {} }
-      $('humanResult').classList.remove('hidden');
-      const text = transcript.trim();
-      if (!text) {
-        $('humanResult').innerHTML = '<p><i class="bi bi-x-circle-fill"></i> No speech was detected. Allow microphone access and speak clearly while the browser is listening.</p>';
-        setRecordingUI('humanWave', 'humanStatus', false, 'No speech detected');
-        return;
-      }
-      $('humanResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Converting the complete sentence into a dog vocalization...</p>';
+      stream.getTracks().forEach(t => t.stop()); if (recognition) { try { recognition.stop(); } catch (_) {} }
+      $('humanResult').classList.remove('hidden'); const text = transcript.trim();
+      if (!text) { $('humanResult').innerHTML = '<p><i class="bi bi-x-circle-fill"></i> No speech was detected. Allow microphone access and speak clearly.</p>'; setRecordingUI('humanWave','humanStatus',false,'No speech detected'); return; }
+      $('humanResult').innerHTML = '<p><i class="bi bi-cpu-fill"></i> Converting the complete sentence...</p>';
       try {
-        let data;
-        try {
-          data = await fetchJson('/api/human-to-dog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-        } catch (_) {
-          data = localHumanToDog(text);
-        }
-        $('humanResult').innerHTML = `<h3><i class="bi bi-soundwave"></i> Dog vocalization generated</h3><p><strong>Human said:</strong> ${text}</p><p><strong>Interpreted intent:</strong> ${data.cue}</p><p><strong>Pattern:</strong> ${wordCountDescription(text)}</p><p>${data.tip}</p><button id="playCueBtn" type="button"><i class="bi bi-volume-up-fill"></i> Play Dog Vocalization</button><p><small>This is a synthetic bark encoding of the sentence, not a proven translation into dog language.</small></p>`;
-        $('playCueBtn').addEventListener('click', () => playDogVoice(text, data.cue));
-        setRecordingUI('humanWave', 'humanStatus', false, 'Done — dog vocalization ready');
-      } catch (error) {
-        $('humanResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
-        setRecordingUI('humanWave', 'humanStatus', false, 'Conversion failed');
-      }
+        let data; try { data = await fetchJson('/api/human-to-dog',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); } catch (_) { data = localHumanToDog(text); }
+        $('humanResult').innerHTML = `<h3><i class="bi bi-soundwave"></i> Dog vocalization generated</h3><p><strong>Human said:</strong> ${text}</p><p><strong>Interpreted intent:</strong> ${data.cue}</p><p><strong>Pattern:</strong> ${Math.min(Math.max(text.split(/\s+/).filter(Boolean).length,2),18)} bark units based on the spoken sentence</p><p>${data.tip}</p><button id="playCueBtn" type="button"><i class="bi bi-volume-up-fill"></i> Play Dog Vocalization</button><p><small>This plays a real recorded dog bark, not a synthesized machine tone. It is an illustrative bark cue, not a proven translation into dog language.</small></p>`;
+        $('playCueBtn').addEventListener('click', () => playRealDogBark(text, data.cue)); setRecordingUI('humanWave','humanStatus',false,'Done — real dog bark ready');
+      } catch (error) { $('humanResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`; setRecordingUI('humanWave','humanStatus',false,'Conversion failed'); }
     };
-    humanRecorder.start();
-    recognition = setupSpeechRecognition();
-    if (recognition) { try { recognition.start(); } catch (_) {} }
-    $('humanRecordBtn').disabled = true;
-    $('humanStopBtn').disabled = false;
-    setRecordingUI('humanWave', 'humanStatus', true, 'Listening to you... speak the full sentence');
-  } catch (error) {
-    $('humanResult').classList.remove('hidden');
-    $('humanResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`;
-  }
+    humanRecorder.start(); recognition = setupSpeechRecognition(); if (recognition) { try { recognition.start(); } catch (_) {} }
+    $('humanRecordBtn').disabled = true; $('humanStopBtn').disabled = false; setRecordingUI('humanWave','humanStatus',true,'Listening to you... speak the full sentence');
+  } catch (error) { $('humanResult').classList.remove('hidden'); $('humanResult').innerHTML = `<p><i class="bi bi-x-circle-fill"></i> ${error.message}</p>`; }
 });
-
-$('humanStopBtn').addEventListener('click', () => {
-  if (humanRecorder && humanRecorder.state !== 'inactive') humanRecorder.stop();
-  $('humanRecordBtn').disabled = false;
-  $('humanStopBtn').disabled = true;
-});
-
-function wordCountDescription(text) {
-  const count = text.trim().split(/\s+/).filter(Boolean).length;
-  return `${Math.min(Math.max(count, 2), 18)} bark units based on the spoken sentence`;
-}
+$('humanStopBtn').addEventListener('click', () => { if (humanRecorder && humanRecorder.state !== 'inactive') humanRecorder.stop(); $('humanRecordBtn').disabled = false; $('humanStopBtn').disabled = true; });
