@@ -4,9 +4,9 @@
 
 ### <i>Talk human. Hear dog.</i>
 
-<img src="frontend/assets/dogtalk-logo.svg" width="120" alt="DogTalk AI Logo" />
-
-<br />
+<p>
+  <strong>🐾 Human ↔ Dog Voice Communication Lab</strong>
+</p>
 
 <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=22&pause=900&color=C8FF54&center=true&vCenter=true&width=700&lines=Human+%E2%86%94+Dog+Voice+Communication;Speech+%E2%86%92+Dog-like+Vocal+Patterns;Dog+Sounds+%E2%86%92+Human-readable+Interpretation;An+Experimental+AI+Communication+Lab" alt="Animated DogTalk AI introduction" />
 
