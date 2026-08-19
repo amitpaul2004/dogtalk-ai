@@ -1,305 +1,426 @@
 <div align="center">
 
-# 🐶 DogTalk AI
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=38&duration=2600&pause=700&color=B9FF4A&center=true&vCenter=true&repeat=true&width=900&height=70&lines=DOGTALK+AI;Human+Voice+%E2%86%92+BarkCode;Dog+Voice+%E2%86%92+Human+Meaning;Experimental+AI+Communication+Lab" alt="DogTalk AI animated title" />
 
-### <i>Talk human. Hear dog.</i>
+<br>
 
-<p>
-  <strong>🐾 Human ↔ Dog Voice Communication Lab</strong>
-</p>
+### Human ↔ Dog Voice Communication Lab
 
-<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=22&pause=900&color=C8FF54&center=true&vCenter=true&width=700&lines=Human+%E2%86%94+Dog+Voice+Communication;Speech+%E2%86%92+Dog-like+Vocal+Patterns;Dog+Sounds+%E2%86%92+Human-readable+Interpretation;An+Experimental+AI+Communication+Lab" alt="Animated DogTalk AI introduction" />
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=600&size=18&duration=2200&pause=500&color=8EA0B8&center=true&vCenter=true&repeat=true&width=850&lines=Listen+%E2%80%A2+Understand+%E2%80%A2+Encode+%E2%80%A2+Vocalize;Meaning+becomes+a+repeatable+BarkCode+pattern;Built+with+FastAPI+%2B+JavaScript+%2B+Audio+Analysis" alt="Animated subtitle" />
 
-<br />
+<br>
 
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/amitpaul2004/dogtalk-ai)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-Frontend-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Bootstrap Icons](https://img.shields.io/badge/Bootstrap-Icons-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)](https://icons.getbootstrap.com/)
+
+<img src="https://img.shields.io/badge/STATUS-ACTIVE_DEVELOPMENT-B9FF4A?style=flat-square&labelColor=10141D" alt="status">
+<img src="https://img.shields.io/badge/BARKCODE-v0.4-8A5CFF?style=flat-square&labelColor=10141D" alt="BarkCode version">
+<img src="https://img.shields.io/badge/UI-ANIMATED-36C5F0?style=flat-square&labelColor=10141D" alt="animated UI">
 
 </div>
 
 ---
 
-## ✨ What is DogTalk AI?
+## About DogTalk AI
 
-**DogTalk AI** is a coding-first experimental project exploring whether AI and audio analysis can create a useful communication bridge between humans and dogs.
+**DogTalk AI** is an experimental voice-communication project that explores a two-way interface between humans and dogs.
 
-The current prototype has two directions:
-
-```text
-                 🧠 DogTalk AI
-                      │
-          ┌───────────┴───────────┐
-          ▼                       ▼
-     🐕 DOG → HUMAN          🧑 HUMAN → DOG
-          │                       │
-     Bark / Whine / Growl     Human Speech
-          │                       │
-     Audio Analysis           Speech Recognition
-          │                       │
-     AI Interpretation        Meaning / Intent
-          │                       │
-     🗣️ Human Explanation    🐕 Dog-like Vocal Pattern
-```
-
-> ⚠️ **Important:** DogTalk AI is not a scientifically verified dog-language translator. Dog communication is complex and context-dependent. Current outputs are experimental interpretations and repeatable dog-like vocal patterns, not literal translations.
-
----
-
-## 🎙️ Core Features
-
-| Feature | Description |
-|---|---|
-| 🐕 **Dog → Human** | Records dog vocalizations and analyzes acoustic features. |
-| 🧑 **Human → Dog** | Captures a complete human sentence and converts its meaning into a repeatable dog-like vocal pattern. |
-| 🎤 **Voice Input** | Browser microphone recording for both directions. |
-| 🔊 **Audio Output** | Plays generated dog-like vocal patterns and spoken interpretations. |
-| 📊 **Audio Analysis** | Estimates pitch, energy, duration and vocal bursts. |
-| 🧠 **AI-ready Architecture** | Designed to evolve from heuristics into trained ML/deep-learning models. |
-| 🌑 **Modern UI** | Dark glassmorphism interface with animated waves, orbit effects and responsive cards. |
-| 📱 **Responsive** | Designed for desktop and mobile screens. |
-
----
-
-## ⚡ Animated Experience
-
-The interface is designed as an interactive AI communication lab:
+Instead of treating every human sentence as a fixed number of identical barks, the current system detects **meaning and intent**, converts it into a project-defined **BarkCode**, and plays a repeatable sequence using real recorded dog vocalization.
 
 ```text
-       🎤 HUMAN VOICE
-             │
-             ▼
-     ┌─────────────────┐
-     │  ~ ~ ~ ~ ~ ~ ~  │  ← animated audio wave
-     └────────┬────────┘
-              │
-              ▼
-          🧠 AI CORE
-              │
-              ▼
-     ┌─────────────────┐
-     │ 🐕 BARK PATTERN │  ← generated vocal sequence
-     └────────┬────────┘
-              │
-              ▼
-          🔊 PLAY
+          HUMAN                                        DOG
+            |                                            |
+            v                                            v
+     +--------------+                            +---------------+
+     |   SPEECH     |                            | VOCALIZATION  |
+     +------+-------+                            +-------+-------+
+            |                                            |
+            v                                            v
+     +--------------+                            +---------------+
+     |   INTENT     |        DOGTALK AI          | AUDIO FEATURES|
+     |  DETECTION   | <------------------------> |   ANALYSIS    |
+     +------+-------+                            +-------+-------+
+            |                                            |
+            v                                            v
+     +--------------+                            +---------------+
+     |  BARKCODE    |                            | HUMAN-READABLE|
+     |   PATTERN    |                            | INTERPRETATION|
+     +------+-------+                            +---------------+
+            |
+            v
+     REAL DOG BARK AUDIO
 ```
 
-The README itself also uses an animated typing header to showcase the project's communication concept.
+> **Research note:** BarkCode is a project-defined, trainable association protocol. It is not a scientifically proven literal translation of human language into dog language. A dog would need training and repeated context to associate a BarkCode pattern with a desired meaning.
 
 ---
 
-## 🧩 Tech Stack
+## Animated Interface
+
+<div align="center">
+
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=17&duration=1200&pause=250&color=B9FF4A&center=true&vCenter=true&repeat=true&width=800&lines=RECORDING+VOICE...;DETECTING+MEANING...;BUILDING+BARKCODE...;PLAYING+REAL+DOG+VOCALIZATION..." alt="Animated processing pipeline" />
+
+</div>
+
+The frontend includes a motion layer designed to make the application feel like a live AI communication console:
+
+- Scroll-triggered content reveals
+- Interactive 3D card tilt
+- Magnetic button movement
+- Cursor-following ambient glow on desktop
+- Animated hero/orbit treatment
+- Recording and analysis pulse states
+- Animated audio-wave states
+- Result-entry transitions
+- Scroll progress indicator
+- Animated flow connectors
+- Responsive motion behavior
+- `prefers-reduced-motion` accessibility support
+- Bootstrap Icons instead of emoji/sticker UI controls
+
+```text
+IDLE             LISTENING            PROCESSING             READY
+ |                   |                    |                    |
+ v                   v                    v                    v
+[ mic ]  ------>  [ ~~~~~ ]  ------>  [ AI CORE ]  ------> [ PLAY ]
+                     ^                       |                   |
+                     |                       v                   v
+                 pulse/glow             BarkCode             real bark
+```
+
+---
+
+## BarkCode Engine
+
+<div align="center">
+
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=17&duration=1800&pause=450&color=36C5F0&center=true&vCenter=true&repeat=true&width=850&lines=HELLO+%E2%86%92+1-1;YES+%E2%86%92+1;NO+%E2%86%92+3-1;COME+%E2%86%92+2-1-2;PLAY+%E2%86%92+1-1-2-1;DANGER+%E2%86%92+3-3-1-3" alt="Animated BarkCode examples" />
+
+</div>
+
+The backend recognizes many everyday intentions instead of only a small set of training commands.
+
+| Human meaning | Example input | BarkCode |
+|---|---|---:|
+| Greeting | `Hello`, `Hi`, `Good morning` | `1-1` |
+| Identity | `I am Amit`, `My name is...` | `2-1-2` |
+| Yes | `Yes`, `Okay`, `Sure` | `1` |
+| No | `No`, `Don't`, `Never` | `3-1` |
+| Thanks | `Thank you` | `1-1-1` |
+| Sorry | `I'm sorry` | `2-1` |
+| Love | `I love you`, `I miss you` | `1-2-1-2` |
+| Help | `Help me` | `3-2-3` |
+| Food | `I'm hungry`, `Food`, `Treat` | `2-1-2` |
+| Water | `Water`, `I'm thirsty` | `1-3-1` |
+| Walk | `Let's go outside`, `Walk` | `2-2-1` |
+| Play | `Let's play`, `Fetch`, `Ball` | `1-1-2-1` |
+| Sleep | `Bedtime`, `Go to sleep` | `2-2` |
+| Come | `Come here` | `2-1-2` |
+| Sit | `Sit down` | `1-2` |
+| Stay | `Stay`, `Wait` | `2-3` |
+| Stop | `Stop`, `Leave it`, `Drop it` | `3-2-3` |
+| Praise | `Good boy`, `Good girl` | `1-1-1` |
+| Danger | `Watch out`, `Be careful` | `3-3-1-3` |
+| Pain | `I'm hurt`, `It hurts` | `3-2-3-2` |
+| Fear | `I'm scared` | `3-1-3` |
+| Happy | `I'm happy`, `Excited` | `1-1-1-2` |
+| Sad | `I'm sad`, `Lonely` | `2-3-2` |
+| Home | `Go home`, `Inside` | `2-1-1` |
+| Car | `Let's go in the car` | `1-2-2` |
+| Bath | `Bath`, `Wash` | `3-1-2` |
+| Vet | `Vet`, `Doctor`, `Clinic` | `2-3-2` |
+
+Unknown language is not discarded. The system also falls back to broader categories such as **question**, **request**, **positive statement**, **negative statement**, and **general statement**.
+
+---
+
+## Sentence Composition
+
+DogTalk can split a longer human message into multiple semantic units.
+
+```text
+"Hello, I am Amit Paul. Come here. Let's play."
+
+          |
+          v
++---------------------+
+| Speech Recognition  |
++----------+----------+
+           |
+           v
++---------------------+
+| Semantic Segments   |
++----------+----------+
+           |
+     +-----+------+---------+---------+
+     |            |         |         |
+     v            v         v         v
+  HELLO       IDENTITY     COME      PLAY
+   1-1         2-1-2      2-1-2    1-1-2-1
+     |            |         |         |
+     +------------+----+----+---------+
+                       |
+                       v
+              REAL BARK SEQUENCE
+```
+
+The same BarkCode should remain stable for the same intent so it can be used as a repeatable training association.
+
+---
+
+## Dog → Human Mode
+
+DogTalk also supports the reverse direction.
+
+```text
+DOG BARK / WHINE / VOCALIZATION
+              |
+              v
+        Browser Recorder
+              |
+              v
+       FastAPI / Local
+        Audio Analysis
+              |
+      +-------+-------+
+      |       |       |
+      v       v       v
+    Pitch   Energy   Bursts
+      \       |       /
+       \      |      /
+        v     v     v
+        Interpretation
+              |
+              v
+       Human-readable text
+              |
+              v
+       Spoken explanation
+```
+
+The prototype measures properties including estimated pitch, energy, duration and sound bursts to produce a cautious behavioral interpretation.
+
+---
+
+## Core Features
+
+| Feature | Status | Description |
+|---|:---:|---|
+| Human → Dog | `LIVE` | Human speech is mapped to semantic BarkCode patterns. |
+| Dog → Human | `LIVE` | Dog audio is analyzed into acoustic features and an interpretation. |
+| Real bark playback | `LIVE` | Uses recorded dog vocalization rather than an oscillator-generated machine tone. |
+| Multi-intent sentences | `LIVE` | Longer speech can produce composed BarkCode sequences. |
+| Browser microphone | `LIVE` | MediaRecorder captures audio directly in supported browsers. |
+| Speech recognition | `LIVE` | Browser speech recognition captures spoken sentences. |
+| Local fallback | `LIVE` | Frontend has fallback behavior when the API cannot be reached. |
+| Animated interface | `LIVE` | Motion, waves, glow, tilt, transitions and recording states. |
+| ML dog classifier | `PLANNED` | Replace/extend heuristics with trained models and labeled datasets. |
+
+---
+
+## Technology Stack
+
+<div align="center">
+
+<img src="https://skillicons.dev/icons?i=python,fastapi,js,html,css,bootstrap,git,github&perline=8" alt="Technology stack" />
+
+</div>
 
 ### Frontend
 
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Web Speech API
-- MediaRecorder API
-- Web Audio API
-- Responsive / glassmorphism UI
+`HTML5` · `CSS3` · `Vanilla JavaScript` · `Bootstrap Icons` · `MediaRecorder API` · `Web Speech API` · `Web Audio API`
 
 ### Backend
 
-- Python
-- FastAPI
-- Uvicorn
-- Pydantic
-- CORS middleware
+`Python` · `FastAPI` · `Uvicorn` · `Pydantic` · `CORS`
 
-### Audio / ML foundation
+### Audio foundation
 
-- Librosa
-- NumPy
-- Acoustic feature extraction
-- Prototype rule-based interpretation
-- Future ML / deep-learning model integration
+`Librosa` · `NumPy` · acoustic feature extraction · rule-based semantic BarkCode engine
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 DogTalk-AI/
-│
-├── backend/
-│   ├── main.py                 # FastAPI application
-│   ├── audio_analyzer.py       # Dog audio feature analysis
-│   └── requirements.txt        # Python dependencies
-│
-├── frontend/
-│   ├── index.html              # Main UI
-│   ├── style.css               # Animated visual system
-│   ├── app.js                  # Voice + API interactions
-│   └── assets/
-│       └── dogtalk-logo.svg    # Logo + favicon asset
-│
-├── uploads/
-│   └── .gitkeep
-│
-├── .gitignore
-└── README.md
+|
++-- backend/
+|   +-- main.py                 # FastAPI + BarkCode intent engine
+|   +-- audio_analyzer.py       # Dog audio feature analysis
+|   +-- requirements.txt        # Python dependencies
+|
++-- frontend/
+|   +-- index.html              # Main communication interface
+|   +-- style.css               # Responsive animated visual system
+|   +-- app.js                  # Recording, speech, BarkCode and playback
+|   +-- assets/                 # DogTalk visual assets
+|
++-- uploads/
+|   +-- .gitkeep
+|
++-- .gitignore
++-- README.md
 ```
 
 ---
 
-## 🚀 Run Locally
+## Run Locally
 
-### 1. Clone the repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/amitpaul2004/dogtalk-ai.git
 cd dogtalk-ai
 ```
 
-### 2. Start the FastAPI backend
+### 2. Backend
 
 ```bash
 cd backend
 python -m venv .venv
 ```
 
-**Windows:**
+Windows:
 
 ```bash
 .venv\Scripts\activate
 ```
 
-**macOS / Linux:**
+macOS / Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
-Install dependencies:
+Install and run:
 
 ```bash
 pip install -r requirements.txt
-```
-
-Start the API:
-
-```bash
 uvicorn main:app --reload
 ```
 
-Backend:
+API server: `http://127.0.0.1:8000`
 
-```text
-http://127.0.0.1:8000
-```
+Swagger docs: `http://127.0.0.1:8000/docs`
 
-API documentation:
+### 3. Frontend
 
-```text
-http://127.0.0.1:8000/docs
-```
-
-### 3. Start the frontend
-
-Open a second terminal:
+Open another terminal:
 
 ```bash
 cd frontend
 python -m http.server 5501
 ```
 
-Open:
-
-```text
-http://127.0.0.1:5501/index.html
-```
+Then visit `http://127.0.0.1:5501/index.html`.
 
 ---
 
-## 🔌 API Endpoints
+## API
 
 ```text
-GET  /api/health
-     └── Check backend status
+GET /api/health
+ |
+ +--> backend health status
 
 POST /api/dog-to-human
-     └── Analyze a dog audio recording
+ |
+ +--> dog audio
+      |
+      +--> acoustic analysis
+           |
+           +--> human-readable interpretation
 
 POST /api/human-to-dog
-     └── Process a human voice/text command
+ |
+ +--> human sentence
+      |
+      +--> semantic intent
+           |
+           +--> BarkCode segment(s)
+                |
+                +--> real dog-bark playback
 ```
 
 ---
 
-## 🧪 Example
+## Roadmap
 
-### Human → Dog
+<div align="center">
 
-Human says:
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=19&duration=1700&pause=450&color=8A5CFF&center=true&vCenter=true&repeat=true&width=850&lines=TODAY%3A+Semantic+BarkCode+Prototype;NEXT%3A+Labeled+Dog+Audio+Dataset;THEN%3A+ML+Vocalization+Classifier;FUTURE%3A+Context-Aware+Multimodal+Communication" alt="Animated roadmap" />
 
-> **"Hello, my name is Amit Paul. I am in JIS University. My age is 22."**
+</div>
 
-Prototype flow:
-
-```text
-Human Voice
-     ↓
-Speech Recognition
-     ↓
-Complete Sentence
-     ↓
-Meaning / Intent Encoding
-     ↓
-Dog-like Vocal Pattern
-     ↓
-🔊 Woof • Bark • Awooo • Bark • Woof
-```
-
-The output is an experimental vocal pattern representing the input rather than a claim that a dog would understand the literal human sentence.
-
----
-
-## 🧠 Roadmap
-
-- [x] Modern responsive UI
+- [x] Responsive DogTalk interface
+- [x] Advanced UI animations
 - [x] Dog → Human prototype
-- [x] Human → Dog voice interaction
-- [x] Browser microphone recording
-- [x] Dog-like audio pattern generation
-- [x] Animated visual interface
-- [x] Logo + favicon
+- [x] Human → Dog voice capture
+- [x] Real recorded bark playback
+- [x] BarkCode semantic intent system
+- [x] Multi-intent sentence processing
+- [x] Common daily-life intent vocabulary
+- [x] Generic question/request/statement fallbacks
+- [x] Browser microphone integration
+- [x] Bootstrap Icons UI
+- [ ] Multiple real bark samples for richer BarkCode phonemes
+- [ ] Per-dog BarkCode training profiles
+- [ ] Training mode with reward/association sessions
 - [ ] Real dog-audio dataset
-- [ ] Labeled dog behavior dataset
-- [ ] ML-based dog vocalization classifier
+- [ ] Labeled behavior/context dataset
+- [ ] ML vocalization classifier
 - [ ] Deep-learning audio embeddings
-- [ ] Context-aware multimodal model
-- [ ] Real-time microphone analysis
-- [ ] Better natural dog vocal synthesis
+- [ ] Context from body posture and video
+- [ ] BarkCode learning analytics
 - [ ] Model evaluation and confidence calibration
-- [ ] Cloud deployment
+- [ ] Production deployment
 
 ---
 
-## 🔬 Future AI Architecture
+## Future AI Architecture
 
 ```mermaid
 graph LR
-    A[🎤 Human Voice] --> B[Speech Recognition]
-    B --> C[Semantic Understanding]
-    C --> D[Dog Vocalization Model]
-    D --> E[🔊 Dog-like Audio]
+    A[Human Voice] --> B[Speech Recognition]
+    B --> C[Semantic Intent Engine]
+    C --> D[BarkCode Encoder]
+    D --> E[Real Dog Vocalization Library]
+    E --> F[Trainable Bark Pattern]
 
-    F[🐕 Dog Sound] --> G[Audio Preprocessing]
-    G --> H[Acoustic Features]
-    H --> I[ML / Deep Learning]
-    I --> J[Behavior / Intent]
-    J --> K[🗣️ Human Voice Explanation]
+    G[Dog Vocalization] --> H[Audio Preprocessing]
+    H --> I[Acoustic Features]
+    I --> J[ML / Deep Learning Model]
+    J --> K[Context / Intent]
+    K --> L[Human Explanation]
 ```
 
 ---
 
-## 🤝 Contributing
+## Experimental Principle
 
-Contributions, ideas and experiments are welcome.
+```text
+A random bark is not a language.
+
+A consistent pattern
+        +
+repeatable meaning
+        +
+training and context
+        =
+BarkCode experiment
+```
+
+DogTalk AI should therefore be treated as an **experimental communication and training interface**, not as a claim that dogs naturally speak encoded human sentences.
+
+---
+
+## Contributing
+
+Contributions are welcome.
 
 ```bash
 git checkout -b feature/your-feature
@@ -308,24 +429,24 @@ git commit -m "feat: add your feature"
 git push origin feature/your-feature
 ```
 
-Then open a Pull Request.
+Then open a pull request describing what you changed and how it was tested.
 
 ---
 
-## 📜 License
+## License
 
-This project is intended as an educational and experimental AI project. Add your preferred open-source license before distributing it publicly.
+DogTalk AI is currently presented as an educational and experimental project. Add an explicit open-source license before redistribution or production use, and verify licenses for all external audio/assets used by the project.
 
 ---
 
 <div align="center">
 
-### 🐾 Built to explore the question:
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=22&duration=2400&pause=700&color=B9FF4A&center=true&vCenter=true&repeat=true&width=900&lines=LISTEN+TO+THE+VOICE;UNDERSTAND+THE+INTENT;ENCODE+THE+MEANING;BUILD+A+BRIDGE" alt="Animated footer" />
 
-## <i>"What if humans and dogs could communicate through AI?"</i>
+### DogTalk AI
 
-<br />
+**Experimental Human ↔ Dog Voice Communication Lab**
 
-**DogTalk AI · Experimental Voice Communication Lab · v0.3**
+`BarkCode · Audio Intelligence · Voice Interaction · Animated UI`
 
 </div>
