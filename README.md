@@ -5,7 +5,7 @@
 <br>
 
 ### Human ↔ Dog Voice Communication Lab
----
+
 
 <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=600&size=18&duration=2200&pause=500&color=8EA0B8&center=true&vCenter=true&repeat=true&width=850&lines=Listen+%E2%80%A2+Understand+%E2%80%A2+Encode+%E2%80%A2+Vocalize;Meaning+becomes+a+repeatable+BarkCode+pattern;Built+with+FastAPI+%2B+JavaScript+%2B+Audio+Analysis" alt="Animated subtitle" />
 
