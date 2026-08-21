@@ -63,7 +63,10 @@ const LOCAL_BARK_INTENTS = [
   ['vet',['vet','veterinarian','doctor','clinic','hospital'],'VET',[2,3,2]],
   ['owner',['owner','my human','my person','dad','mom','family'],'OWNER',[2,1,2]]
 ];
-function phraseMatch(text, phrase) { return phrase.includes(' ') || phrase.includes("'") ? text.includes(phrase) : new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\b`).test(text); }
+function phraseMatch(text, phrase) {
+  if (phrase.includes(' ') || phrase.includes("'")) return text.includes(phrase);
+  return new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\b`, 'i').test(text);
+}
 function localClassify(text) {
   const normalized = text.toLowerCase().replace(/\s+/g,' ').trim(); let best = null, score = 0;
   for (const [intent, phrases, cue, pattern] of LOCAL_BARK_INTENTS) { let current = 0; for (const phrase of phrases) if (phraseMatch(normalized,phrase)) current += phrase.split(/\s+/).length; if (current > score) { score = current; best = {intent,cue,pattern,label:intent}; } }
@@ -97,7 +100,11 @@ async function playBarkCode(segments) {
   }
 }
 
-async function getMicrophone() { if (!navigator.mediaDevices?.getUserMedia) throw new Error('Your browser does not support microphone recording. Use Chrome or Edge over localhost.'); return navigator.mediaDevices.getUserMedia({audio:true}); }
+async function getMicrophone() {
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Your browser does not support microphone access. Use Chrome or Edge over localhost or HTTPS.');
+  if (typeof MediaRecorder === 'undefined') throw new Error('Your browser does not support audio recording. Use an up-to-date version of Chrome, Edge or Firefox.');
+  return navigator.mediaDevices.getUserMedia({audio:true});
+}
 async function analyzeDogAudioLocally(blob) {
   const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) throw new Error('Local audio analysis is not supported by this browser.'); const ctx=new Ctx();
   try { const buffer=await ctx.decodeAudioData(await blob.arrayBuffer()),data=buffer.getChannelData(0),sr=buffer.sampleRate,duration=buffer.duration; if(!data.length) throw new Error('The recording is empty.'); let sum=0,crossings=0,previous=data[0]; const frame=Math.max(256,Math.floor(sr*.03)),energies=[];
