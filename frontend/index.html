@@ -42,16 +42,18 @@
         <div class="card-top"><div class="direction dog-direction">DOG → HUMAN</div><img class="card-logo" src="assets/dogtalk-icon.svg" alt="DogTalk AI" /></div>
         <h2>What is your dog saying?</h2>
         <p class="card-description">Record a bark, whine or growl. DogTalk analyzes the sound and speaks a human interpretation.</p>
-        <div class="recorder-panel"><div class="wave-wrap"><div id="dogWave" class="wave">• • • • • • • • • • • •</div></div><div id="dogStatus" class="status"><span class="status-dot"></span> Ready to listen</div></div>
+        <div class="recorder-panel"><div class="wave-wrap"><canvas id="dogWave" class="wave" role="img" aria-label="Live microphone waveform"></canvas></div><div id="dogStatus" class="status"><span class="status-dot"></span> Ready to listen</div></div>
         <div class="button-row"><button id="dogRecordBtn" class="primary-button"><span><i class="bi bi-mic-fill"></i></span> Start recording</button><button id="dogStopBtn" class="secondary" disabled><span><i class="bi bi-stop-fill"></i></span> Stop</button></div>
-        <audio id="dogPreview" controls class="audio hidden"></audio><div id="dogResult" class="result hidden"></div>
+        <audio id="dogPreview" controls class="audio hidden"></audio>
+        <section id="dogDashboard" class="analysis-dashboard hidden" aria-live="polite"></section>
+        <div id="dogResult" class="result hidden"></div>
       </article>
 
       <article class="translator-card human-card">
         <div class="card-top"><div class="direction human-direction">HUMAN → DOG</div><img class="card-logo" src="assets/dogtalk-icon.svg" alt="DogTalk AI" /></div>
         <h2>How would a dog say it?</h2>
         <p class="card-description">Speak a complete sentence. DogTalk converts the meaning into a sequence of dog-like vocal patterns.</p>
-        <div class="recorder-panel"><div class="wave-wrap"><div id="humanWave" class="wave">• • • • • • • • • • • •</div></div><div id="humanStatus" class="status"><span class="status-dot"></span> Microphone ready</div></div>
+        <div class="recorder-panel"><div class="wave-wrap"><canvas id="humanWave" class="wave" role="img" aria-label="Live microphone waveform"></canvas></div><div id="humanStatus" class="status"><span class="status-dot"></span> Microphone ready</div></div>
         <div class="transcript" id="transcript">Your spoken sentence will appear here…</div>
         <div class="button-row"><button id="humanRecordBtn" class="primary-button"><span><i class="bi bi-mic-fill"></i></span> Speak to dog</button><button id="humanStopBtn" class="secondary" disabled><span><i class="bi bi-stop-fill"></i></span> Stop</button></div>
         <div id="humanResult" class="result hidden"></div>

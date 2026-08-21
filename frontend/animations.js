@@ -109,19 +109,6 @@
     });
   });
 
-  // Lightweight animated punctuation inside the waveform placeholders.
-  document.querySelectorAll('.wave').forEach((wave) => {
-    const original = wave.textContent.trim().replace(/\s+/g, ' ');
-    const symbols = original.split(' ');
-    if (!symbols.length) return;
-
-    window.setInterval(() => {
-      if (wave.classList.contains('active')) return;
-      const next = symbols.map((symbol, i) => (i + Math.floor(Date.now() / 280)) % 3 === 0 ? '•' : symbol);
-      wave.textContent = next.join(' ');
-    }, 700);
-  });
-
   // Enhance recording status with a live dot pulse without touching app logic.
   const statusIds = ['dogStatus', 'humanStatus'];
   statusIds.forEach((id) => {
